@@ -1,0 +1,1575 @@
+{
+    // Use IntelliSense para saber los atributos posibles.
+    // Mantenga el puntero para ver las descripciones de los existentes atributos.
+    // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Iniciar Chrome para localhost",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}"
+        }
+    ]
+}<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PsicoCenter Equilibrio · Trabaja bien. Vive mejor.</title>
+<meta name="description" content="Pausas de 1 a 10 minutos, mini juegos y herramientas para prevenir el estrés laboral y el burnout. Sin registro, sin datos personales.">
+<meta name="theme-color" content="#1F4E4A">
+<meta property="og:title" content="PsicoCenter Equilibrio">
+<meta property="og:description" content="Pausas activas, mini juegos y tu plan de bienestar laboral. Trabaja bien. Vive mejor.">
+<meta property="og:type" content="website">
+<!--
+  ==========================================================================
+  PsicoCenter Equilibrio — herramienta de pausas para el bienestar laboral
+  Un solo archivo: HTML + CSS + JavaScript. Sin backend ni librerías externas.
+  - Para editar textos, enlaces, líneas de ayuda o el Google Forms:
+    busca "CONFIGURACIÓN" (primer bloque de código, al inicio del body).
+  - Los datos (racha, checklist, reto, termómetro) se guardan SOLO en
+    localStorage del dispositivo, bajo la clave "pce.v1".
+  ==========================================================================
+-->
+<style>
+/* =========================================================================
+   1. TOKENS DE DISEÑO (colores, tipografía, radios, sombras)
+   ========================================================================= */
+:root{
+  --teal:#1F4E4A;          /* verde azulado oscuro (marca) */
+  --teal-700:#2A625D;
+  --teal-600:#36766F;
+  --teal-950:#123330;
+  --mint:#CFE8DE;          /* verde menta suave */
+  --mint-50:#EEF7F2;
+  --mint-200:#B7DCCD;
+  --cream:#FBF7EE;         /* crema */
+  --paper:#FFFFFF;
+  --gold:#C9A24D;          /* dorado de acento */
+  --gold-soft:#F3E6C4;
+  --ink:#15302D;           /* texto principal */
+  --ink-soft:#4C625F;      /* texto secundario (contraste AA sobre crema) */
+  --line:#DCE7E1;
+  --ok:#3E8E5F; --warn:#C28B1E; --alert:#B5473A;
+  --ok-bg:#E3F2E8; --warn-bg:#FBF0D6; --alert-bg:#F8E1DD;
+  --radius:22px; --radius-sm:14px; --radius-lg:30px;
+  --shadow:0 10px 30px -14px rgba(31,78,74,.35);
+  --shadow-soft:0 4px 14px -8px rgba(31,78,74,.3);
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-display:ui-rounded,"SF Pro Rounded","Nunito","Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+  --nav-h:72px;
+  --ease:cubic-bezier(.4,.1,.2,1);
+  --slow:.6s;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--cream);line-height:1.5;
+  font-size:17px;-webkit-tap-highlight-color:transparent;min-height:100vh;
+  background-image:radial-gradient(1200px 500px at 110% -10%,var(--mint) 0,transparent 60%),radial-gradient(900px 400px at -20% 0,var(--mint-50) 0,transparent 60%);
+  background-attachment:fixed}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.2;margin:0 0 .4em;color:var(--teal);letter-spacing:-.01em}
+h1{font-size:1.7rem} h2{font-size:1.4rem} h3{font-size:1.15rem}
+p{margin:0 0 .8em}
+a{color:var(--teal-600)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:10px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+[hidden]{display:none!important}
+
+/* =========================================================================
+   2. ESTRUCTURA: cabecera, contenido, navegación inferior
+   ========================================================================= */
+.app-header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;background:color-mix(in srgb,var(--cream) 88%,transparent);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;min-width:0}
+.brand svg{width:42px;height:42px;flex:none}
+.brand-name{font-family:var(--font-display);font-weight:800;color:var(--teal);font-size:1.08rem;line-height:1.1}
+.brand-name span{color:var(--gold)}
+.brand-tag{font-size:.78rem;color:var(--ink-soft);white-space:nowrap}
+.header-actions{margin-left:auto;display:flex;gap:6px}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--paper);
+  display:grid;place-items:center;font-size:1.15rem;transition:background .3s var(--ease)}
+.icon-btn[aria-pressed="true"]{background:var(--teal);color:var(--cream);border-color:var(--teal)}
+main{max-width:760px;margin:0 auto;padding:18px 16px calc(var(--nav-h) + 40px + env(safe-area-inset-bottom))}
+.screen{animation:fadeUp var(--slow) var(--ease)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:space-around;
+  background:var(--teal);padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+  border-radius:24px 24px 0 0;box-shadow:0 -8px 30px -12px rgba(18,51,48,.6)}
+.bottom-nav button{flex:1;max-width:130px;background:none;border:0;color:var(--mint);display:flex;flex-direction:column;
+  align-items:center;gap:2px;padding:8px 2px;border-radius:16px;font-size:.78rem;font-weight:600;min-height:56px;
+  transition:background .4s var(--ease),color .4s var(--ease)}
+.bottom-nav button .ico{font-size:1.35rem;line-height:1}
+.bottom-nav button[aria-current="page"]{background:var(--teal-700);color:var(--paper)}
+.bottom-nav button[aria-current="page"] .ico{transform:translateY(-1px)}
+.bottom-nav button[aria-current="page"]::after{content:"";width:18px;height:3px;border-radius:3px;background:var(--gold);margin-top:2px}
+
+/* =========================================================================
+   3. COMPONENTES: tarjetas, botones, chips, segmentados
+   ========================================================================= */
+.card{background:var(--paper);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-soft);border:1px solid var(--line);margin-bottom:14px}
+.card.mint{background:var(--mint-50);border-color:var(--mint-200)}
+.card.teal{background:var(--teal);color:var(--cream);border-color:var(--teal)}
+.card.teal h2,.card.teal h3{color:var(--paper)}
+.card.gold{background:var(--gold-soft);border-color:#E7D3A0}
+.eyebrow{font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--gold);margin-bottom:4px}
+.muted{color:var(--ink-soft)}
+.small{font-size:.88rem}
+.center{text-align:center}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:620px){.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.grid2.wide{grid-template-columns:repeat(4,1fr)}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px 22px;border-radius:999px;
+  border:2px solid transparent;font-weight:700;font-size:1rem;text-decoration:none;transition:transform .3s var(--ease),background .3s var(--ease),box-shadow .3s var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--teal);color:var(--paper);box-shadow:var(--shadow)}
+.btn-primary:hover{background:var(--teal-700)}
+.btn-gold{background:var(--gold);color:var(--teal-950);box-shadow:0 10px 24px -12px rgba(201,162,77,.9)}
+.btn-ghost{background:transparent;color:var(--teal);border-color:var(--teal)}
+.btn-soft{background:var(--mint);color:var(--teal)}
+.btn-light{background:var(--paper);color:var(--teal)}
+.btn-block{width:100%}
+.btn-xl{min-height:64px;font-size:1.15rem}
+.btn-sm{min-height:42px;padding:8px 16px;font-size:.92rem}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{min-height:52px;min-width:64px;padding:10px 16px;border-radius:18px;border:2px solid var(--line);background:var(--paper);
+  font-weight:700;color:var(--teal);transition:all .35s var(--ease)}
+.chip[aria-pressed="true"],.chip[aria-checked="true"]{background:var(--teal);color:var(--paper);border-color:var(--teal);box-shadow:var(--shadow)}
+.chips.time .chip{flex:1;font-size:1.1rem}
+.chips.time .chip small{display:block;font-size:.7rem;font-weight:600;opacity:.8}
+.moods{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.mood{border:2px solid var(--line);background:var(--paper);border-radius:18px;padding:10px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;
+  font-size:.74rem;font-weight:700;color:var(--ink-soft);transition:all .35s var(--ease)}
+.mood .e{font-size:1.9rem;line-height:1;transition:transform .4s var(--ease)}
+.mood[aria-checked="true"]{border-color:var(--teal);background:var(--mint-50);color:var(--teal)}
+.mood[aria-checked="true"] .e{transform:scale(1.15)}
+
+.seg{display:flex;background:var(--mint-50);border:1px solid var(--mint-200);border-radius:999px;padding:4px;gap:4px;margin-bottom:16px;overflow-x:auto}
+.seg button{flex:1;border:0;background:none;border-radius:999px;padding:10px 12px;font-weight:700;color:var(--teal-600);min-height:44px;white-space:nowrap;font-size:.92rem;transition:all .35s var(--ease)}
+.seg button[aria-selected="true"]{background:var(--teal);color:var(--paper);box-shadow:var(--shadow-soft)}
+
+.streak{display:flex;align-items:center;gap:12px}
+.streak .leaf{width:46px;height:46px;border-radius:50%;background:var(--gold-soft);display:grid;place-items:center;font-size:1.4rem}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.8rem;font-weight:700;background:var(--mint);color:var(--teal)}
+
+.progress{height:12px;border-radius:999px;background:var(--mint-50);overflow:hidden;border:1px solid var(--mint-200)}
+.progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--teal-600),var(--gold));border-radius:999px;transition:width .8s var(--ease)}
+
+.list{list-style:none;padding:0;margin:0}
+.list li{padding:10px 0;border-bottom:1px dashed var(--line);display:flex;gap:10px}
+.list li:last-child{border-bottom:0}
+.list .dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--gold);margin-top:8px}
+
+.hscroll{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 12px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:thin}
+.hscroll > *{scroll-snap-align:start;flex:0 0 78%;max-width:300px}
+.tip{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-soft);margin:0}
+.tip .n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--teal);color:var(--paper);font-weight:800;font-size:.9rem;margin-bottom:8px}
+
+table.compare{width:100%;border-collapse:separate;border-spacing:0;font-size:.92rem;overflow:hidden;border-radius:var(--radius-sm);border:1px solid var(--line)}
+table.compare th{background:var(--teal);color:var(--paper);padding:10px;text-align:left}
+table.compare td{padding:10px;border-top:1px solid var(--line);vertical-align:top;background:var(--paper)}
+table.compare td:first-child{font-weight:700;color:var(--teal);background:var(--mint-50);width:28%}
+
+.game-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (min-width:620px){.game-grid{grid-template-columns:repeat(4,1fr)}}
+.game-card{border:1px solid var(--line);background:var(--paper);border-radius:var(--radius);padding:16px 12px;text-align:left;display:flex;flex-direction:column;gap:6px;
+  min-height:150px;box-shadow:var(--shadow-soft);transition:transform .4s var(--ease),box-shadow .4s var(--ease)}
+.game-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.game-card .gi{font-size:2rem;width:54px;height:54px;border-radius:18px;background:var(--mint-50);display:grid;place-items:center}
+.game-card b{font-family:var(--font-display);color:var(--teal);font-size:1rem;line-height:1.2}
+.game-card span{font-size:.8rem;color:var(--ink-soft)}
+
+.notice{display:flex;gap:10px;align-items:flex-start;border-radius:var(--radius-sm);padding:12px 14px;background:var(--gold-soft);color:var(--teal-950);font-size:.92rem;border:1px solid #E7D3A0}
+.notice.alert{background:var(--alert-bg);border-color:#EBC0B8}
+.notice.mint{background:var(--mint-50);border-color:var(--mint-200)}
+
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--teal-950);color:var(--paper);
+  padding:12px 20px;border-radius:999px;font-weight:600;opacity:0;pointer-events:none;transition:all .5s var(--ease);z-index:100;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+/* =========================================================================
+   4. REPRODUCTOR DE PAUSA / JUEGOS (pantalla completa)
+   ========================================================================= */
+.overlay{position:fixed;inset:0;z-index:50;background:var(--cream);display:flex;flex-direction:column;animation:fadeUp .5s var(--ease)}
+.overlay.dark{background:var(--teal-950);color:var(--cream)}
+.ov-top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line);background:var(--paper)}
+.overlay.dark .ov-top{background:var(--teal);border-color:var(--teal-700)}
+.ov-title{font-family:var(--font-display);font-weight:800;color:var(--teal);font-size:1.02rem;line-height:1.2;min-width:0;flex:1}
+.overlay.dark .ov-title{color:var(--paper)}
+.ov-title small{display:block;font-weight:600;font-size:.78rem;color:var(--ink-soft)}
+.overlay.dark .ov-title small{color:var(--mint)}
+.ov-body{flex:1;position:relative;overflow:auto;display:flex;flex-direction:column}
+.ov-foot{display:flex;gap:8px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--paper);border-top:1px solid var(--line);flex-wrap:wrap;justify-content:center}
+.btn-end{background:var(--gold);color:var(--teal-950);min-height:44px;padding:8px 16px;border-radius:999px;border:0;font-weight:800;white-space:nowrap}
+
+.timer-ring{position:relative;width:76px;height:76px;flex:none}
+.timer-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.timer-ring .bg{stroke:var(--mint)} .timer-ring .fg{stroke:var(--teal);transition:stroke-dashoffset 1s linear}
+.timer-ring b{position:absolute;inset:0;display:grid;place-items:center;font-variant-numeric:tabular-nums;font-weight:800;color:var(--teal);font-size:1.05rem}
+.steps-dots{display:flex;gap:6px;justify-content:center;margin:6px 0}
+.steps-dots i{width:9px;height:9px;border-radius:50%;background:var(--mint-200);transition:all .4s var(--ease)}
+.steps-dots i.on{background:var(--teal);width:24px;border-radius:9px}
+.steps-dots i.done{background:var(--gold)}
+
+.act-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;gap:14px}
+.act-emoji{font-size:4.2rem;line-height:1;animation:float 6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.act-step{font-family:var(--font-display);font-size:1.45rem;font-weight:800;color:var(--teal);max-width:520px;min-height:3.6em;display:flex;align-items:center;justify-content:center}
+.act-hint{color:var(--ink-soft);max-width:480px}
+
+/* Círculo de respiración */
+.breath{position:relative;width:min(70vw,300px);aspect-ratio:1;display:grid;place-items:center;margin:8px auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.breath .halo{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,var(--mint) 0,transparent 70%)}
+.breath .core{width:42%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--teal-600),var(--teal));box-shadow:0 0 0 10px rgba(207,232,222,.6),0 20px 50px -18px rgba(31,78,74,.8);
+  transform:scale(var(--s,1));transition:transform var(--dur,4s) cubic-bezier(.45,.05,.35,1),box-shadow .5s;display:grid;place-items:center;color:var(--paper)}
+.breath .core.sync{box-shadow:0 0 0 14px rgba(201,162,77,.55),0 20px 50px -18px rgba(31,78,74,.8)}
+.breath .label{position:absolute;bottom:-6px;left:0;right:0;text-align:center;font-family:var(--font-display);font-weight:800;font-size:1.5rem;color:var(--teal)}
+.breath .count{font-size:1.6rem;font-weight:800;font-variant-numeric:tabular-nums;transform:scale(calc(1/var(--s,1)));transition:transform var(--dur,4s) cubic-bezier(.45,.05,.35,1)}
+.overlay.dark .breath .label{color:var(--paper)}
+
+/* Canvas de juegos */
+.game-stage{position:relative;flex:1;min-height:320px;overflow:hidden;touch-action:none}
+.game-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.game-hud{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;z-index:2}
+.game-hud > *{pointer-events:auto}
+.pill{background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:700;color:var(--teal);font-size:.9rem}
+
+/* Suelta tu preocupación */
+.worry{width:100%;max-width:480px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px;flex:1}
+.paper{position:relative;background:var(--paper);border-radius:12px;box-shadow:var(--shadow);padding:18px;min-height:170px;border:1px solid var(--line);
+  background-image:repeating-linear-gradient(transparent 0 31px,var(--mint) 31px 32px);transition:all 1s var(--ease);transform-origin:center}
+.paper textarea{width:100%;min-height:140px;border:0;background:transparent;resize:none;font-size:1.1rem;line-height:32px;outline:none}
+.paper.crumple{border-radius:50%;transform:scale(.25) rotate(260deg);filter:saturate(.3) brightness(.95);background-image:radial-gradient(circle at 30% 30%,#fff,#e9e4d8)}
+.paper.crumple textarea{opacity:0;filter:blur(4px)}
+.paper.throw{animation:throw 1.1s cubic-bezier(.4,0,.6,1) forwards}
+@keyframes throw{0%{transform:translate(0,0) scale(.25) rotate(260deg)}45%{transform:translate(0,-90px) scale(.22) rotate(380deg)}100%{transform:translate(0,240px) scale(.1) rotate(560deg);opacity:0}}
+.bin{width:110px;height:120px;margin:0 auto;position:relative}
+.bin .lid{transform-origin:10% 100%;transition:transform .5s var(--ease)}
+.bin.open .lid{transform:rotate(-28deg)}
+
+/* Atrapa lo bueno */
+.word{position:absolute;left:0;top:0;padding:10px 18px;border-radius:999px;background:var(--paper);border:2px solid var(--mint-200);color:var(--teal);font-weight:800;
+  font-family:var(--font-display);box-shadow:var(--shadow-soft);white-space:nowrap;will-change:transform;font-size:1.05rem}
+.word.got{background:var(--gold);border-color:var(--gold);color:var(--teal-950);transition:opacity .6s,transform .6s}
+.collected{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;background:var(--mint-50);border-top:1px solid var(--line);min-height:56px;align-items:center}
+
+/* Memoria */
+.mem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px;max-width:460px;margin:0 auto;width:100%}
+@media (min-width:560px){.mem-grid{grid-template-columns:repeat(4,1fr)}}
+.mcard{aspect-ratio:3/4;perspective:800px;border:0;background:none;padding:0}
+.mcard .in{position:relative;width:100%;height:100%;transition:transform .7s var(--ease);transform-style:preserve-3d}
+.mcard.flip .in{transform:rotateY(180deg)}
+.mcard .f,.mcard .b{position:absolute;inset:0;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;gap:4px}
+.mcard .f{background:var(--teal);background-image:radial-gradient(circle at 50% 50%,var(--teal-600) 0 18%,transparent 19%),repeating-radial-gradient(circle at 50% 50%,transparent 0 10px,rgba(207,232,222,.12) 10px 12px);box-shadow:var(--shadow-soft)}
+.mcard .b{background:var(--paper);border:2px solid var(--mint-200);transform:rotateY(180deg);font-weight:800;color:var(--teal);font-size:.85rem}
+.mcard .b .e{font-size:2rem}
+.mcard.match .b{border-color:var(--gold);background:var(--gold-soft)}
+
+/* Mito o realidad */
+.quiz{max-width:520px;margin:0 auto;padding:20px 16px;width:100%;display:flex;flex-direction:column;gap:14px}
+.quiz .q{font-family:var(--font-display);font-size:1.35rem;font-weight:800;color:var(--teal);min-height:4em}
+.feedback{border-radius:var(--radius-sm);padding:14px;animation:fadeUp .5s var(--ease)}
+.feedback.good{background:var(--ok-bg)} .feedback.learn{background:var(--gold-soft)}
+
+/* Mandala */
+.mandala-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;gap:12px}
+.mandala-wrap svg{width:min(88vw,62vh,460px);height:auto}
+.mandala-wrap svg path,.mandala-wrap svg circle{cursor:pointer;transition:fill .6s var(--ease);stroke:var(--teal);stroke-width:1.2}
+.palette{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.swatch{width:42px;height:42px;border-radius:50%;border:3px solid var(--paper);box-shadow:0 0 0 1px var(--line)}
+.swatch[aria-checked="true"]{box-shadow:0 0 0 3px var(--teal);transform:scale(1.08)}
+
+/* Ruleta */
+.wheel-box{position:relative;width:min(78vw,300px);aspect-ratio:1;margin:6px auto 14px}
+.wheel-box svg.wheel{width:100%;height:100%;transition:transform 4s cubic-bezier(.17,.67,.21,1)}
+.wheel-box .pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid var(--gold);filter:drop-shadow(0 2px 2px rgba(0,0,0,.2));z-index:2}
+.wheel-box .hub{position:absolute;inset:38%;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-size:1.6rem;box-shadow:var(--shadow)}
+
+/* Modo equipo (proyección) */
+.team-view{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:12px}
+.team-step-n{color:var(--gold);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:clamp(.9rem,2vw,1.2rem)}
+.team-title{font-family:var(--font-display);font-weight:800;font-size:clamp(1.8rem,5.5vw,4.2rem);color:var(--paper);line-height:1.1;max-width:18ch}
+.team-text{font-size:clamp(1.05rem,2.6vw,1.9rem);color:var(--mint);max-width:36ch}
+.team-timer{font-family:var(--font-display);font-weight:800;font-size:clamp(4.5rem,18vw,12rem);color:var(--paper);font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.02em}
+.team-timer.end{color:var(--gold);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.overlay.dark .ov-foot{background:var(--teal);border-color:var(--teal-700)}
+.overlay.dark .steps-dots i{background:var(--teal-700)} .overlay.dark .steps-dots i.on{background:var(--paper)}
+.team-card{display:flex;gap:14px;align-items:center;text-align:left;width:100%;border:1px solid var(--line);background:var(--paper);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow-soft)}
+.team-card .gi{font-size:2rem;width:60px;height:60px;border-radius:20px;background:var(--mint-50);display:grid;place-items:center;flex:none}
+.team-card b{display:block;font-family:var(--font-display);color:var(--teal);font-size:1.08rem}
+
+/* Termómetro */
+.scale{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.scale button{min-height:62px;border-radius:18px;border:2px solid var(--line);background:var(--paper);font-weight:700;color:var(--teal);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.scale button small{font-weight:600;color:var(--ink-soft)}
+.scale button[aria-checked="true"]{background:var(--teal);border-color:var(--teal);color:var(--paper)}
+.scale button[aria-checked="true"] small{color:var(--mint)}
+.thermo{display:flex;gap:14px;align-items:center}
+.thermo .bulb{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:1.8rem;flex:none}
+.lvl-green .bulb{background:var(--ok-bg)} .lvl-yellow .bulb{background:var(--warn-bg)} .lvl-red .bulb{background:var(--alert-bg)}
+.lvl-green{border-left:6px solid var(--ok)} .lvl-yellow{border-left:6px solid var(--warn)} .lvl-red{border-left:6px solid var(--alert)}
+.meter{height:14px;border-radius:999px;background:linear-gradient(90deg,var(--ok) 0 33%,var(--warn) 33% 66%,var(--alert) 66%);position:relative;margin:10px 0 4px;opacity:.85}
+.meter i{position:absolute;top:-5px;width:24px;height:24px;border-radius:50%;background:var(--paper);border:4px solid var(--teal);transform:translateX(-50%);transition:left 1.2s var(--ease)}
+
+/* Checklist */
+.check-item{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--paper);margin-bottom:10px;overflow:hidden}
+.check-head{display:flex;align-items:center;gap:12px;padding:12px 14px}
+.check-head input{width:28px;height:28px;accent-color:var(--teal);flex:none}
+.check-head label{flex:1;font-weight:600;cursor:pointer}
+.check-head .num{color:var(--gold);font-weight:800;margin-right:4px}
+.check-more{border:0;background:var(--mint-50);width:36px;height:36px;border-radius:50%;flex:none;font-size:1rem;color:var(--teal);transition:transform .4s var(--ease)}
+.check-more[aria-expanded="true"]{transform:rotate(180deg)}
+.check-body{padding:0 14px 14px}
+.check-body .seg{margin-bottom:10px}
+.check-body .seg button{font-size:.82rem;padding:8px}
+.check-item.done{background:var(--mint-50)} .check-item.done label{color:var(--teal-600)}
+
+/* Reto 7 días */
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0 14px}
+.day{aspect-ratio:1;border-radius:14px;display:grid;place-items:center;font-weight:800;background:var(--mint-50);color:var(--teal);border:2px solid var(--mint-200)}
+.day.done{background:var(--teal);color:var(--paper);border-color:var(--teal)}
+.day.today{border-color:var(--gold)}
+.challenge{display:flex;gap:12px;align-items:center;padding:12px;border-radius:var(--radius-sm);border:1px solid var(--line);background:var(--paper);margin-bottom:8px}
+.challenge .d{width:40px;height:40px;border-radius:12px;background:var(--mint-50);display:grid;place-items:center;font-weight:800;color:var(--teal);flex:none}
+.challenge.done .d{background:var(--gold);color:var(--teal-950)}
+.challenge p{margin:0;flex:1;font-weight:600}
+.challenge.done p{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:var(--gold)}
+
+textarea.field,input.field,select.field{width:100%;border:2px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;background:var(--paper);min-height:52px}
+textarea.field{min-height:120px;resize:vertical}
+.field:focus{border-color:var(--teal);outline:none}
+.check-opt{display:flex;gap:10px;align-items:center;padding:12px;border:2px solid var(--line);border-radius:var(--radius-sm);background:var(--paper);cursor:pointer;margin-bottom:8px;font-weight:600}
+.check-opt input{width:24px;height:24px;accent-color:var(--teal)}
+.check-opt:has(input:checked){border-color:var(--teal);background:var(--mint-50)}
+.msg-preview{white-space:pre-wrap;background:var(--mint-50);border:1px dashed var(--teal-600);border-radius:var(--radius-sm);padding:14px;font-size:.95rem}
+
+.help-line{display:flex;gap:12px;align-items:center;padding:14px;border-radius:var(--radius-sm);background:var(--paper);border:1px solid var(--line);margin-bottom:10px;text-decoration:none;color:inherit}
+.help-line .gi{width:48px;height:48px;border-radius:50%;background:var(--mint-50);display:grid;place-items:center;font-size:1.4rem;flex:none}
+.help-line b{display:block;color:var(--teal)}
+.help-line .num{font-weight:800;color:var(--teal-950);font-size:1.05rem}
+.verify{background:var(--gold-soft);color:var(--teal-950);border-radius:6px;padding:0 6px;font-size:.82rem;font-weight:700}
+.res-link{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px dashed var(--line);text-decoration:none;color:var(--ink)}
+.res-link:last-child{border-bottom:0}
+.res-link b{color:var(--teal)}
+
+.hero{position:relative;overflow:hidden;background:var(--teal);color:var(--cream);border-radius:var(--radius-lg);padding:22px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.hero h1{color:var(--paper);font-size:1.6rem;margin-bottom:6px}
+.hero p{color:var(--mint);margin:0}
+.hero .blob{position:absolute;border-radius:50%;filter:blur(2px);opacity:.35;animation:float 9s ease-in-out infinite}
+.hero .blob.a{width:160px;height:160px;right:-40px;top:-50px;background:var(--mint)}
+.hero .blob.b{width:90px;height:90px;right:60px;bottom:-40px;background:var(--gold);animation-delay:-3s}
+.hero > *{position:relative}
+.q-label{font-family:var(--font-display);font-weight:800;color:var(--teal);font-size:1.05rem;margin:0 0 10px}
+.plan-preview{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 0}
+.plan-preview span{background:var(--mint-50);border:1px solid var(--mint-200);color:var(--teal);border-radius:999px;padding:4px 10px;font-size:.82rem;font-weight:700}
+.closing{max-width:480px;margin:0 auto;padding:24px 18px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;flex:1}
+.closing .big{font-size:4rem;animation:float 6s ease-in-out infinite}
+.sound-panel{position:absolute;right:12px;top:calc(62px + env(safe-area-inset-top));background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;width:min(320px,92vw);z-index:40}
+footer.foot{text-align:center;font-size:.8rem;color:var(--ink-soft);padding:10px 0 0}
+
+/* =========================================================================
+   5. MOVIMIENTO REDUCIDO: se respetan las preferencias del sistema
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
+  .screen,.overlay{animation:none}
+  .act-emoji,.hero .blob,.closing .big{animation:none}
+  .wheel-box svg.wheel{transition-duration:.6s}
+  .mcard .in{transition-duration:.2s}
+}
+</style>
+</head>
+<body>
+<script>
+/* =========================================================================
+   CONFIGURACIÓN — edita aquí textos, enlaces, líneas de ayuda y buzón.
+   Todo lo demás del archivo funciona con estos valores.
+   ========================================================================= */
+var CONFIG = {
+  appName: "PsicoCenter",
+  appSuffix: "Equilibrio",
+  slogan: "Trabaja bien. Vive mejor.",
+  welcomeTitle: "Tómate una pausa. Te la mereces.",
+  welcomeText: "Elige cuánto tiempo tienes y cómo te sientes. Nosotros armamos tu pausa.",
+
+  /* Líneas de ayuda (El Salvador). Usa "[verificar número vigente]" hasta confirmar. */
+  helpLines: [
+    { icon: "🚨", name: "Emergencias", detail: "Policía, ambulancia y bomberos", number: "911" },
+    { icon: "💬", name: "Atención psicológica — Ministerio de Salud (MINSAL)", detail: "Orientación y apoyo emocional", number: "7741-6614" },
+    { icon: "🤝", name: "Línea de apoyo a la mujer (ISDEMU)", detail: "Orientación por WhatsApp ante violencia", number: "2591-4000", whatsapp: "50325914000" },
+  ],
+
+  /* Lecturas, videos y apps recomendadas */
+  resources: {
+    readings: [
+      { title: "La salud mental en el trabajo", by: "OMS", url: "https://www.who.int/es/news-room/fact-sheets/detail/mental-health-at-work" },
+      { title: "Burn-out: un fenómeno ocupacional (CIE-11)", by: "OMS", url: "https://www.who.int/news/item/28-05-2019-burn-out-an-occupational-phenomenon-international-classification-of-diseases" },
+      { title: "Salud mental", by: "OPS", url: "https://www.paho.org/es/temas/salud-mental" }
+    ],
+    videos: [
+      { title: "Respiración guiada de 5 minutos", by: "YouTube", url: "https://www.youtube.com/results?search_query=respiraci%C3%B3n+guiada+5+minutos" },
+      { title: "Pausas activas en la oficina", by: "YouTube", url: "https://www.youtube.com/results?search_query=pausas+activas+oficina" }
+    ],
+    apps: [
+      { title: "Insight Timer", by: "Meditaciones gratuitas en español", url: "https://insighttimer.com/es" },
+      { title: "Medito", by: "App gratuita sin anuncios", url: "https://meditofoundation.org" },
+      { title: "Headspace", by: "Meditación y sueño", url: "https://www.headspace.com/es" }
+    ]
+  },
+
+  /* BUZÓN ANÓNIMO (Google Forms)
+     1. Crea un formulario SIN pedir correo (Configuración > Respuestas > "No recopilar").
+     2. Agrega 5 preguntas: Reacción, Sugerencia, P1, P2, P3 (respuesta corta).
+     3. Abre la vista previa, clic derecho > "Ver código fuente" y busca "entry." para
+        obtener los números de cada campo; o usa "Obtener enlace prellenado".
+     4. Pega abajo la URL que termina en /formResponse y los entry.
+     Si formAction queda vacío, el buzón muestra un aviso y no envía nada. */
+  googleForm: {
+    formAction: "",   // Ej.: "https://docs.google.com/forms/d/e/XXXXXXXX/formResponse"
+    fields: {
+      reaction:   "entry.1111111111",
+      suggestion: "entry.2222222222",
+      q1:         "entry.3333333333",
+      q2:         "entry.4444444444",
+      q3:         "entry.5555555555"
+    }
+  },
+
+  crisisText: "Esta herramienta no sustituye la atención profesional. Si sientes que estás en crisis, busca ayuda ahora."
+};
+</script>
+
+<a href="#main" class="sr-only">Saltar al contenido</a>
+
+<header class="app-header">
+  <a class="brand" href="#pausa" aria-label="PsicoCenter Equilibrio, ir al inicio">
+    <!-- Logo: cerebro estilizado -->
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="31" fill="#1F4E4A"/>
+      <g fill="none" stroke="#CFE8DE" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M31 14c-3-3-9-2-10 2-5 0-8 4-7 8-4 2-4 8-1 10-2 4 1 9 6 9 1 4 6 6 10 4l2-1V14z"/>
+        <path d="M33 14c3-3 9-2 10 2 5 0 8 4 7 8 4 2 4 8 1 10 2 4-1 9-6 9-1 4-6 6-10 4l-2-1V14z"/>
+        <path d="M20 24c3 0 5 2 5 5M18 35c3-1 6 0 7 3M44 24c-3 0-5 2-5 5M46 35c-3-1-6 0-7 3"/>
+      </g>
+      <path d="M32 47c0-6 4-9 9-9-1 5-4 9-9 9z" fill="#C9A24D"/>
+    </svg>
+    <div>
+      <div class="brand-name" id="brandName">PsicoCenter <span>Equilibrio</span></div>
+      <div class="brand-tag" id="brandTag">Trabaja bien. Vive mejor.</div>
+    </div>
+  </a>
+  <div class="header-actions">
+    <button class="icon-btn" id="soundBtn" aria-pressed="false" aria-haspopup="dialog" aria-controls="soundPanel" aria-label="Sonido: desactivado">🔈</button>
+  </div>
+  <div class="sound-panel" id="soundPanel" role="dialog" aria-label="Opciones de sonido" hidden>
+    <h3>Sonido</h3>
+    <p class="small muted">Desactivado por defecto. 🎧 Usa audífonos si estás en un espacio compartido.</p>
+    <div class="seg" role="tablist" aria-label="Tipo de sonido" id="soundSeg">
+      <button role="tab" data-sound="off" aria-selected="true">Apagado</button>
+      <button role="tab" data-sound="tones" aria-selected="false">Tonos suaves</button>
+      <button role="tab" data-sound="noise" aria-selected="false">Ruido suave</button>
+    </div>
+    <label class="check-opt"><input type="checkbox" id="vibeToggle"> Vibración suave en juegos</label>
+    <button class="btn btn-soft btn-sm btn-block" id="soundClose">Listo</button>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+  <!-- Cada pestaña se dibuja desde JavaScript en su contenedor -->
+  <section id="s-pausa" class="screen" aria-labelledby="t-pausa"></section>
+  <section id="s-juegos" class="screen" aria-labelledby="t-juegos" hidden></section>
+  <section id="s-equipo" class="screen" aria-labelledby="t-equipo" hidden></section>
+  <section id="s-plan" class="screen" aria-labelledby="t-plan" hidden></section>
+  <section id="s-apoyo" class="screen" aria-labelledby="t-apoyo" hidden></section>
+</main>
+
+<nav class="bottom-nav" aria-label="Secciones principales">
+  <button data-tab="pausa" aria-current="page"><span class="ico" aria-hidden="true">🌿</span>Pausa</button>
+  <button data-tab="juegos"><span class="ico" aria-hidden="true">🫧</span>Juegos</button>
+  <button data-tab="equipo"><span class="ico" aria-hidden="true">👥</span>Equipo</button>
+  <button data-tab="plan"><span class="ico" aria-hidden="true">🗓️</span>Mi plan</button>
+  <button data-tab="apoyo"><span class="ico" aria-hidden="true">💚</span>Apoyo</button>
+</nav>
+
+<div id="overlayRoot"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="sr-only" id="announcer" aria-live="polite"></div>
+<script>
+(function(){
+"use strict";
+/* =========================================================================
+   A. UTILIDADES
+   ========================================================================= */
+var $ = function(s, r){ return (r || document).querySelector(s); };
+var $$ = function(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function h(html){ var t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+function fmt(sec){ sec = Math.max(0, Math.ceil(sec)); var m = Math.floor(sec / 60), s = sec % 60; return m + ":" + (s < 10 ? "0" : "") + s; }
+function shuffle(a){ a = a.slice(); for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function pick(a){ return a[Math.floor(Math.random() * a.length)]; }
+var toastTimer;
+function toast(msg){ var t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2800); }
+function announce(msg){ var a = $("#announcer"); a.textContent = ""; setTimeout(function(){ a.textContent = msg; }, 50); }
+function dayKey(d){ d = d || new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function verifyTag(s){ return esc(s).replace(/\[(verificar[^\]]*|agrega[^\]]*)\]/g, '<span class="verify">[$1]</span>'); }
+window.PCE = {}; // espacio compartido entre bloques de script
+
+/* =========================================================================
+   B. ALMACENAMIENTO LOCAL (solo en este dispositivo)
+   ========================================================================= */
+var STORE_KEY = "pce.v1";
+function defaults(){ return { streak:{count:0,last:null}, pauses:0, checklist:{estres:[],burnout:[]}, challenge:{start:null,done:{}}, thermo:null, prefs:{vibe:false} }; }
+function load(){ try { var d = JSON.parse(localStorage.getItem(STORE_KEY)); if (d) { var base = defaults(); for (var k in base) if (d[k] === undefined) d[k] = base[k]; return d; } } catch(e){} return defaults(); }
+var Store = {
+  data: load(),
+  save: function(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(this.data)); } catch(e){} },
+  clear: function(){ try { localStorage.removeItem(STORE_KEY); } catch(e){} this.data = defaults(); },
+  registerPause: function(){
+    var today = dayKey(), y = new Date(); y.setDate(y.getDate() - 1);
+    var s = this.data.streak;
+    if (s.last !== today){ s.count = (s.last === dayKey(y)) ? s.count + 1 : 1; s.last = today; }
+    this.data.pauses++; this.save();
+  },
+  streakNow: function(){ var s = this.data.streak, y = new Date(); y.setDate(y.getDate() - 1);
+    return (s.last === dayKey() || s.last === dayKey(y)) ? s.count : 0; }
+};
+function clearAll(){
+  if (!confirm("¿Borrar tu racha, checklist, reto y resultados guardados en este dispositivo?")) return;
+  Store.clear(); toast("Listo. Tus datos se borraron de este dispositivo."); route(true);
+}
+
+/* =========================================================================
+   C. SONIDO (Web Audio API) — apagado por defecto
+   ========================================================================= */
+var Sound = {
+  mode: "off", ctx: null, noise: null,
+  ensure: function(){
+    if (!this.ctx){ var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; this.ctx = new AC(); }
+    if (this.ctx.state === "suspended") this.ctx.resume();
+    return this.ctx;
+  },
+  setMode: function(m){
+    this.mode = m;
+    if (m === "off"){ this.stopNoise(); }
+    else { this.ensure(); if (m === "noise") this.startNoise(); else this.stopNoise(); this.tone(528, .8, .06, true); }
+    var b = $("#soundBtn"); b.setAttribute("aria-pressed", m !== "off"); b.textContent = m === "off" ? "🔈" : "🔊";
+    b.setAttribute("aria-label", "Sonido: " + (m === "off" ? "desactivado" : m === "tones" ? "tonos suaves" : "ruido suave"));
+  },
+  tone: function(freq, dur, vol, force){
+    if (this.mode === "off" && !force) return;
+    var c = this.ensure(); if (!c) return;
+    dur = dur || .5; vol = vol || .07;
+    var o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
+    o.type = "sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .04); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + .05);
+  },
+  chime: function(force){ var self = this; [523.25, 659.25, 783.99].forEach(function(f, i){ setTimeout(function(){ self.tone(f, 1.8, .06, force); }, i * 200); }); },
+  gong: function(){ var self = this; [196, 294, 392, 523].forEach(function(f, i){ self.tone(f, 3.5 - i * .5, .07 - i * .012, true); }); },
+  pop: function(){ this.tone(600 + Math.random() * 500, .18, .05); },
+  breath: function(k){ if (this.mode !== "tones") return; this.tone(k === "in" ? 396 : k === "out" ? 330 : 440, 1.2, .04); },
+  startNoise: function(){
+    var c = this.ensure(); if (!c || this.noise) return;
+    var len = c.sampleRate * 3, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0), last = 0;
+    for (var i = 0; i < len; i++){ var w = Math.random() * 2 - 1; last = (last + .02 * w) / 1.02; d[i] = last * 3.2; } // ruido "marrón", más suave que el blanco
+    var src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    src.buffer = buf; src.loop = true; f.type = "lowpass"; f.frequency.value = 900;
+    g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.exponentialRampToValueAtTime(.18, c.currentTime + 2);
+    src.connect(f); f.connect(g); g.connect(c.destination); src.start();
+    this.noise = { src: src, g: g };
+  },
+  stopNoise: function(){ if (!this.noise || !this.ctx) return; var n = this.noise, t = this.ctx.currentTime; n.g.gain.exponentialRampToValueAtTime(0.0001, t + .8); setTimeout(function(){ try { n.src.stop(); } catch(e){} }, 900); this.noise = null; }
+};
+function buzz(ms){ if (Store.data.prefs.vibe && navigator.vibrate) { try { navigator.vibrate(ms); } catch(e){} } }
+
+/* =========================================================================
+   D. DATOS: estados de ánimo y actividades de pausa
+   ========================================================================= */
+var MOODS = [
+  { id:"tranquilo", e:"😌", label:"Tranquilo" },
+  { id:"cansado",   e:"🥱", label:"Cansado" },
+  { id:"tenso",     e:"😬", label:"Tenso" },
+  { id:"abrumado",  e:"🤯", label:"Abrumado" },
+  { id:"agotado",   e:"😩", label:"Agotado" }
+];
+var ACT = {
+  breath446:   { cat:"breath", type:"breath", icon:"🌬️", name:"Respiración 4-4-6", pattern:[4,4,6], hint:"Inhala 4, sostén 4, exhala 6. Exhalar lento le avisa a tu cuerpo que puede bajar el ritmo." },
+  breathSquare:{ cat:"breath", type:"breath", icon:"🟩", name:"Respiración cuadrada", pattern:[4,4,4,4], hint:"Cuatro tiempos iguales: inhala, sostén, exhala, sostén." },
+  breathEnergy:{ cat:"breath", type:"breath", icon:"☀️", name:"Respiración que activa", pattern:[4,0,4], hint:"Respira por la nariz, profundo y parejo, para despertar tu energía." },
+  neck:      { cat:"body", type:"steps", icon:"🙆", name:"Estiramiento de cuello", steps:["Siéntate derecho y relaja los hombros.","Inclina la oreja derecha hacia el hombro derecho. Respira.","Vuelve al centro, despacio.","Ahora la oreja izquierda hacia el hombro izquierdo.","Baja la barbilla al pecho y siente la nuca.","Sube la cabeza muy despacio. ¡Bien hecho!"] },
+  shoulders: { cat:"body", type:"steps", icon:"🤷", name:"Relaja tus hombros", steps:["Sube los hombros hacia las orejas… y suéltalos.","Otra vez: sube, sostén 3 segundos y suelta.","Gira los hombros hacia atrás, 5 veces.","Ahora hacia adelante, 5 veces.","Deja caer los brazos y sacúdelos suavemente."] },
+  activate:  { cat:"body", type:"steps", icon:"🙌", name:"Estiramiento que activa", steps:["Ponte de pie si puedes.","Entrelaza los dedos y estira los brazos hacia arriba.","Inclínate suave a la derecha… y a la izquierda.","Marcha en tu lugar unos segundos.","Sacude manos y piernas. ¡Energía!"] },
+  hands:     { cat:"body", type:"steps", icon:"🖐️", name:"Manos y muñecas", steps:["Abre y cierra las manos 10 veces.","Gira las muñecas hacia un lado y hacia el otro.","Estira un brazo al frente y lleva los dedos hacia ti con la otra mano.","Cambia de brazo.","Frota las palmas y colócalas sobre tus ojos cerrados."] },
+  grounding: { cat:"mind", type:"steps", icon:"🖐️", name:"Anclaje 5-4-3-2-1", steps:["Nombra 5 cosas que puedes ver.","4 cosas que puedes tocar.","3 sonidos que escuchas.","2 olores que percibes o que te gustan.","1 cosa por la que hoy das gracias."] },
+  lookFar:   { cat:"mind", type:"steps", icon:"👀", name:"Mira lejos", steps:["Aparta la vista de la pantalla.","Busca un punto lejano, a unos 6 metros o por la ventana.","Míralo con calma y parpadea suave.","Cierra los ojos un momento y vuelve."] },
+  priority:  { cat:"mind", type:"steps", icon:"🧭", name:"Ordena tu mente", steps:["Piensa en todo lo que tienes pendiente.","Elige solo UNA cosa importante para la próxima hora.","¿Cuál es el primer paso pequeño?","Respira. Lo demás puede esperar un poco."] },
+  water:     { cat:"care", type:"steps", icon:"💧", name:"Toma agua", steps:["Levántate y ve por un vaso de agua.","Bébelo despacio, lejos de la pantalla.","Nota cómo te refresca."] },
+  walk:      { cat:"care", type:"steps", icon:"🚶", name:"Camina un poco", steps:["Ponte de pie y estírate.","Camina a paso tranquilo, por el pasillo o afuera.","Fíjate en tus pasos y en tu respiración.","Regresa con calma a tu lugar."] }
+};
+var POOL = { breath:["breath446","breathSquare","breathEnergy"], body:["neck","shoulders","activate","hands"], mind:["grounding","lookFar","priority"], care:["water","walk","lookFar"], game:["burbujas","respira","jardin","suelta","atrapa","memoria","mandala"] };
+var PROFILE = {
+  tranquilo:{ breath:"breathSquare", body:"shoulders", game:"atrapa",   mind:"lookFar",  care:"water", one:"lookFar" },
+  cansado:  { breath:"breathEnergy", body:"activate",  game:"burbujas", mind:"lookFar",  care:"water", one:"activate" },
+  tenso:    { breath:"breath446",    body:"neck",      game:"burbujas", mind:"grounding",care:"walk",  one:"breath446" },
+  abrumado: { breath:"breath446",    body:"shoulders", game:"suelta",   mind:"priority", care:"water", one:"grounding" },
+  agotado:  { breath:"breath446",    body:"hands",     game:"jardin",   mind:"lookFar",  care:"water", one:"breath446" }
+};
+var TEMPLATES = {
+  1:[["one",60]],
+  3:[["breath",60],["body",60],["game",60]],
+  5:[["breath",60],["body",90],["game",120],["mind",30]],
+  10:[["breath",120],["body",120],["game",180],["care",120],["breath",60]]
+};
+function actInfo(id){ if (ACT[id]) return ACT[id]; var g = PCE.GAMES[id]; return { cat:"game", type:"game", icon:g.icon, name:g.title, game:id }; }
+function buildPlan(min, mood){
+  var p = PROFILE[mood] || PROFILE.tenso;
+  return TEMPLATES[min].map(function(t){ var id = p[t[0]]; return { id:id, secs:t[1] }; });
+}
+
+/* =========================================================================
+   E. CÍRCULO DE RESPIRACIÓN (se usa en pausas, juego y modo equipo)
+   ========================================================================= */
+function BreathCircle(pattern, opts){
+  opts = opts || {};
+  var big = reduceMotion ? 1.35 : 1.9;
+  var phases = [
+    { k:"in",   label:"Inhala", secs:pattern[0], s:big },
+    { k:"hold", label:"Sostén", secs:pattern[1], s:big },
+    { k:"out",  label:"Exhala", secs:pattern[2], s:1 },
+    { k:"hold2",label:"Sostén", secs:pattern[3] || 0, s:1 }
+  ].filter(function(p){ return p.secs > 0; });
+  var cycle = phases.reduce(function(a, p){ return a + p.secs; }, 0);
+  var el = h('<div class="breath" ' + (opts.interactive ? 'role="button" tabindex="0" aria-label="Mantén presionado mientras inhalas y sostienes; suelta al exhalar"' : 'aria-hidden="true"') + '><div class="halo"></div><div class="core"><span class="count">4</span></div><div class="label" aria-live="off">Inhala</div></div>');
+  var core = $(".core", el), label = $(".label", el), count = $(".count", el), cur = -1;
+  return {
+    el: el, phases: phases, cycle: cycle,
+    phaseAt: function(t){ var tc = t % cycle, acc = 0; for (var i = 0; i < phases.length; i++){ if (tc < acc + phases[i].secs) return { i:i, p:phases[i], left:acc + phases[i].secs - tc }; acc += phases[i].secs; } return { i:0, p:phases[0], left:phases[0].secs }; },
+    update: function(t){
+      var ph = this.phaseAt(t);
+      if (ph.i !== cur){ cur = ph.i; core.style.setProperty("--dur", ph.p.secs + "s"); core.style.setProperty("--s", ph.p.s); label.textContent = ph.p.label; Sound.breath(ph.p.k); }
+      count.textContent = Math.ceil(ph.left);
+      return ph;
+    },
+    core: core
+  };
+}
+PCE.BreathCircle = BreathCircle;
+
+/* =========================================================================
+   F. REPRODUCTOR DE PAUSA (secuencia con temporizador)
+   ========================================================================= */
+var currentOverlay = null;
+function openOverlay(node){ closeOverlay(); currentOverlay = node; $("#overlayRoot").appendChild(node); document.body.style.overflow = "hidden"; var f = node.querySelector("[data-autofocus]") || node.querySelector("button"); if (f) f.focus(); }
+function closeOverlay(){ if (currentOverlay){ if (currentOverlay._destroy) currentOverlay._destroy(); currentOverlay.remove(); currentOverlay = null; } document.body.style.overflow = ""; }
+PCE.openOverlay = openOverlay; PCE.closeOverlay = closeOverlay;
+document.addEventListener("keydown", function(e){ if (e.key === "Escape" && currentOverlay && currentOverlay._esc) currentOverlay._esc(); });
+
+function mountActivity(container, act, secs){
+  container.innerHTML = "";
+  if (act.type === "breath"){
+    var w = h('<div class="act-wrap"><div class="act-hint"></div></div>');
+    var bc = BreathCircle(act.pattern);
+    w.insertBefore(bc.el, w.firstChild); $(".act-hint", w).textContent = act.hint;
+    container.appendChild(w);
+    return { update:function(t){ bc.update(t); }, destroy:function(){} };
+  }
+  if (act.type === "steps"){
+    var n = act.steps.length, per = secs / n, last = -1;
+    var w2 = h('<div class="act-wrap"><div class="act-emoji" aria-hidden="true"></div><div class="steps-dots" aria-hidden="true"></div><p class="act-step" aria-live="polite"></p><p class="act-hint small">Muévete sin forzar. Si algo duele, detente.</p></div>');
+    $(".act-emoji", w2).textContent = act.icon;
+    $(".steps-dots", w2).innerHTML = act.steps.map(function(){ return "<i></i>"; }).join("");
+    container.appendChild(w2);
+    return { update:function(t){ var i = Math.min(n - 1, Math.floor(t / per)); if (i !== last){ last = i; $(".act-step", w2).textContent = act.steps[i]; $$(".steps-dots i", w2).forEach(function(d, k){ d.className = k < i ? "done" : k === i ? "on" : ""; }); if (i > 0) Sound.tone(440, .4, .04); } }, destroy:function(){} };
+  }
+  if (act.type === "game"){
+    var stage = h('<div style="flex:1;display:flex;flex-direction:column;min-height:0"></div>');
+    container.appendChild(stage);
+    var g = PCE.GAMES[act.game].mount(stage);
+    return { update:function(){}, destroy:function(){ if (g && g.destroy) g.destroy(); } };
+  }
+}
+
+function startSession(items, beforeMood, title){
+  var idx = 0, elapsed = 0, lastTs = performance.now(), paused = false, cur = null, total = 0, spent = 0;
+  items = items.map(function(x){ return { id:x.id, secs:x.secs }; });
+  items.forEach(function(x){ total += x.secs; });
+  var ov = h('<div class="overlay" role="dialog" aria-modal="true" aria-label="Pausa en curso">' +
+    '<div class="ov-top"><div class="timer-ring" aria-hidden="true"><svg viewBox="0 0 80 80"><circle class="bg" cx="40" cy="40" r="34" stroke-width="8" fill="none"/><circle class="fg" cx="40" cy="40" r="34" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="0"/></svg><b>1:00</b></div>' +
+    '<div class="ov-title"><span class="act-name"></span><small class="act-meta"></small></div><button class="btn-end" data-act="end">Terminar pausa</button></div>' +
+    '<div class="ov-body" id="actBody"></div>' +
+    '<div class="ov-foot"><button class="btn btn-soft btn-sm" data-act="pause" aria-pressed="false">⏸ Pausar</button><button class="btn btn-ghost btn-sm" data-act="swap">🔀 Cambiar actividad</button><button class="btn btn-primary btn-sm" data-act="next">Siguiente ▶</button></div></div>');
+  var body = $("#actBody", ov), ring = $(".fg", ov), ringTxt = $(".timer-ring b", ov);
+  function load(){
+    if (cur) cur.destroy();
+    var it = items[idx], act = actInfo(it.id);
+    elapsed = 0;
+    $(".act-name", ov).textContent = act.icon + " " + act.name;
+    $(".act-meta", ov).textContent = (title || "Tu pausa") + " · Actividad " + (idx + 1) + " de " + items.length;
+    cur = mountActivity(body, act, it.secs);
+    announce("Actividad " + (idx + 1) + ": " + act.name);
+    cur.update(0); render();
+  }
+  function render(){
+    var it = items[idx], left = it.secs - elapsed;
+    ringTxt.textContent = fmt(left);
+    ring.style.strokeDashoffset = (213.6 * (elapsed / it.secs)).toFixed(1);
+  }
+  function next(){ spent += elapsed; if (idx < items.length - 1){ idx++; Sound.chime(); load(); } else finish(); }
+  function finish(){ spent += 0; clearInterval(timer); if (cur) cur.destroy(); cur = null; showClosing(ov, beforeMood); }
+  var timer = setInterval(function(){
+    var now = performance.now(), dt = (now - lastTs) / 1000; lastTs = now;
+    if (paused || !cur) return;
+    elapsed += dt;
+    if (elapsed >= items[idx].secs){ elapsed = items[idx].secs; render(); next(); return; }
+    cur.update(elapsed); render();
+  }, 200);
+  ov.addEventListener("click", function(e){
+    var b = e.target.closest("[data-act]"); if (!b) return;
+    var a = b.getAttribute("data-act");
+    if (a === "end"){ spent += elapsed; finish(); }
+    if (a === "next") next();
+    if (a === "pause"){ paused = !paused; b.setAttribute("aria-pressed", paused); b.textContent = paused ? "▶ Continuar" : "⏸ Pausar"; }
+    if (a === "swap"){ var it = items[idx], cat = actInfo(it.id).cat, opts = POOL[cat].filter(function(x){ return x !== it.id; }); it.id = pick(opts); load(); toast("Cambiamos a: " + actInfo(it.id).name); }
+  });
+  ov._destroy = function(){ clearInterval(timer); if (cur) cur.destroy(); };
+  ov._esc = function(){ spent += elapsed; finish(); };
+  ov._spent = function(){ return spent; };
+  openOverlay(ov); load();
+}
+PCE.startSession = startSession;
+
+/* Pantalla de cierre: "¿Cómo te sientes ahora?" */
+function showClosing(ov, beforeMood){
+  ov._destroy = null; ov._esc = function(){ closeOverlay(); route(true); };
+  var counted = !ov._spent || ov._spent() >= 20;
+  if (counted) Store.registerPause();
+  $(".ov-top", ov).innerHTML = '<div class="ov-title">🌿 Pausa terminada<small>' + esc(CONFIG.slogan) + '</small></div><button class="btn-end" data-close>Volver</button>';
+  var foot = $(".ov-foot", ov); if (foot) foot.remove();
+  var body = $(".ov-body", ov);
+  body.innerHTML = '<div class="closing"><div class="big" aria-hidden="true">🌱</div><h2>¿Cómo te sientes ahora?</h2><div class="moods" role="radiogroup" aria-label="Cómo te sientes ahora" style="width:100%">' +
+    MOODS.map(function(m){ return '<button class="mood" role="radio" aria-checked="false" data-mood="' + m.id + '"><span class="e" aria-hidden="true">' + m.e + '</span>' + m.label + '</button>'; }).join("") +
+    '</div><div id="closeMsg"></div></div>';
+  Sound.chime();
+  body.addEventListener("click", function(e){
+    var m = e.target.closest("[data-mood]"); if (!m) return;
+    $$("[data-mood]", body).forEach(function(b){ b.setAttribute("aria-checked", b === m); });
+    var after = m.getAttribute("data-mood"), ai = MOODS.findIndex(function(x){ return x.id === after; }), bi = MOODS.findIndex(function(x){ return x.id === beforeMood; });
+    var msg;
+    if (bi < 0) msg = ai <= 1 ? "Qué bueno. Llévate esta calma a lo que sigue." : "Gracias por darte este momento. Cada pausa cuenta, aunque sea pequeña.";
+    else if (ai < bi) msg = "Se nota el cambio. Tu cuerpo agradece estos minutos.";
+    else if (ai === bi) msg = "Gracias por darte este momento. A veces el alivio llega poco a poco.";
+    else msg = "Está bien no sentirse mejor de inmediato. Si este malestar sigue, en Apoyo hay personas que pueden escucharte.";
+    var st = Store.streakNow();
+    $("#closeMsg", body).innerHTML = '<p class="act-step" style="min-height:0;font-size:1.2rem">' + esc(msg) + '</p>' +
+      (counted ? '<p class="badge">🍃 ' + st + (st === 1 ? " día" : " días") + ' seguidos cuidándote · ' + Store.data.pauses + ' pausas</p>' : '') +
+      '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn btn-primary" data-close>Volver al inicio</button>' + (ai >= 3 ? '<button class="btn btn-ghost" data-help>Ver apoyo</button>' : '') + '</div>';
+    announce(msg);
+  });
+  ov.addEventListener("click", function(e){
+    if (e.target.closest("[data-close]")){ closeOverlay(); location.hash = "#pausa"; route(true); }
+    if (e.target.closest("[data-help]")){ closeOverlay(); location.hash = "#apoyo"; }
+  });
+}
+PCE.showClosing = showClosing;
+
+/* =========================================================================
+   G. PANTALLA "PAUSA YA" (inicio) + RULETA
+   ========================================================================= */
+var homeState = { min:3, mood:null };
+var WHEEL = [
+  { id:"neck", secs:60, e:"🙆", label:"Estira el cuello" },
+  { id:"lookFar", secs:20, e:"👀", label:"Mira lejos 20 segundos" },
+  { id:"water", secs:45, e:"💧", label:"Toma agua" },
+  { id:"shoulders", secs:60, e:"🤷", label:"Relaja los hombros" },
+  { id:"walk", secs:120, e:"🚶", label:"Camina 2 minutos" },
+  { id:"breath446", secs:60, e:"🌬️", label:"Respira 1 minuto" }
+];
+var wheelRot = 0;
+function wheelSVG(){
+  var n = WHEEL.length, seg = 360 / n, r = 100, out = "", cols = ["#1F4E4A", "#CFE8DE", "#2A625D", "#F3E6C4", "#36766F", "#EEF7F2"];
+  WHEEL.forEach(function(w, i){
+    var a0 = (i * seg - 90) * Math.PI / 180, a1 = ((i + 1) * seg - 90) * Math.PI / 180;
+    var x0 = 100 + r * Math.cos(a0), y0 = 100 + r * Math.sin(a0), x1 = 100 + r * Math.cos(a1), y1 = 100 + r * Math.sin(a1);
+    out += '<path d="M100 100 L' + x0.toFixed(2) + ' ' + y0.toFixed(2) + ' A' + r + ' ' + r + ' 0 0 1 ' + x1.toFixed(2) + ' ' + y1.toFixed(2) + ' Z" fill="' + cols[i % cols.length] + '" stroke="#FBF7EE" stroke-width="2"/>';
+    var am = ((i + .5) * seg - 90) * Math.PI / 180;
+    out += '<text x="' + (100 + 68 * Math.cos(am)).toFixed(1) + '" y="' + (100 + 68 * Math.sin(am)).toFixed(1) + '" font-size="24" text-anchor="middle" dominant-baseline="central">' + w.e + '</text>';
+  });
+  return '<svg class="wheel" viewBox="0 0 200 200" aria-hidden="true">' + out + '</svg>';
+}
+function renderHome(el){
+  var st = Store.streakNow();
+  el.innerHTML =
+    '<div class="hero"><div class="blob a"></div><div class="blob b"></div><p class="eyebrow">Pausa ya</p><h1 id="t-pausa">' + esc(CONFIG.welcomeTitle) + '</h1><p>' + esc(CONFIG.welcomeText) + '</p>' +
+      '<p style="margin-top:12px"><span class="badge" style="background:var(--teal-700);color:var(--paper)">🍃 ' + (st ? st + (st === 1 ? " día seguido" : " días seguidos") + " cuidándote" : "Tu primera pausa te espera") + (Store.data.pauses ? " · " + Store.data.pauses + " pausas" : "") + '</span></p></div>' +
+    '<div class="card">' +
+      '<p class="q-label" id="lbl-time">¿Cuánto tiempo tienes?</p>' +
+      '<div class="chips time" role="radiogroup" aria-labelledby="lbl-time">' + [1,3,5,10].map(function(m){ return '<button class="chip" role="radio" aria-checked="' + (homeState.min === m) + '" data-min="' + m + '">' + m + '<small>min</small></button>'; }).join("") + '</div>' +
+      '<p class="q-label" id="lbl-mood" style="margin-top:18px">¿Cómo te sientes?</p>' +
+      '<div class="moods" role="radiogroup" aria-labelledby="lbl-mood">' + MOODS.map(function(m){ return '<button class="mood" role="radio" aria-checked="' + (homeState.mood === m.id) + '" data-mood="' + m.id + '"><span class="e" aria-hidden="true">' + m.e + '</span>' + m.label + '</button>'; }).join("") + '</div>' +
+      '<p class="small muted" style="margin:14px 0 6px">Tu pausa:</p><div class="plan-preview" id="planPreview"></div>' +
+      '<button class="btn btn-gold btn-xl btn-block" id="startPause" style="margin-top:16px">Empezar mi pausa ▶</button>' +
+    '</div>' +
+    '<div class="card mint center"><p class="eyebrow">Ruleta de pausas</p><h2>¿No sabes qué hacer? Gira.</h2>' +
+      '<div class="wheel-box"><div class="pointer"></div>' + wheelSVG() + '<div class="hub" aria-hidden="true">🌿</div></div>' +
+      '<p id="wheelResult" class="act-step" style="min-height:1.6em;font-size:1.2rem" aria-live="polite"></p>' +
+      '<div class="row" style="justify-content:center"><button class="btn btn-primary" id="spin">🎡 Girar la ruleta</button><button class="btn btn-gold" id="doWheel" hidden>Hacerlo ahora</button></div></div>' +
+    '<div class="grid2"><a class="card" href="#plan/termometro" style="text-decoration:none;margin:0"><div style="font-size:1.6rem">🌡️</div><b style="color:var(--teal)">Termómetro de bienestar</b><p class="small muted" style="margin:0">10 preguntas, 2 minutos</p></a>' +
+      '<a class="card" href="#apoyo/entender" style="text-decoration:none;margin:0"><div style="font-size:1.6rem">📖</div><b style="color:var(--teal)">Entender el estrés y el burnout</b><p class="small muted" style="margin:0">Tarjetas cortas</p></a></div>';
+  var wheel = $("svg.wheel", el); wheel.style.transform = "rotate(" + wheelRot + "deg)";
+  function preview(){
+    var plan = buildPlan(homeState.min, homeState.mood || "tenso");
+    $("#planPreview", el).innerHTML = plan.map(function(p){ var a = actInfo(p.id); return "<span>" + a.icon + " " + esc(a.name) + " · " + fmt(p.secs) + "</span>"; }).join("");
+  }
+  preview();
+  var chosen = null;
+  el.onclick = function(e){
+    var t = e.target.closest("[data-min]");
+    if (t){ homeState.min = +t.getAttribute("data-min"); $$("[data-min]", el).forEach(function(b){ b.setAttribute("aria-checked", b === t); }); preview(); return; }
+    var m = e.target.closest("[data-mood]");
+    if (m){ homeState.mood = m.getAttribute("data-mood"); $$("[data-mood]", el).forEach(function(b){ b.setAttribute("aria-checked", b === m); }); preview(); return; }
+    if (e.target.closest("#startPause")){ Sound.ensure && Sound.mode !== "off" && Sound.ensure(); startSession(buildPlan(homeState.min, homeState.mood || "tenso"), homeState.mood, homeState.min + " min"); return; }
+    if (e.target.closest("#spin")){
+      var i = Math.floor(Math.random() * WHEEL.length), seg = 360 / WHEEL.length, target = (360 - (i * seg + seg / 2)) % 360;
+      wheelRot = wheelRot + 1800 + ((target - (wheelRot % 360)) + 360) % 360;
+      wheel.style.transform = "rotate(" + wheelRot + "deg)";
+      $("#wheelResult", el).textContent = "Girando…"; $("#doWheel", el).hidden = true; Sound.tone(500, .3, .04);
+      setTimeout(function(){ chosen = WHEEL[i]; $("#wheelResult", el).textContent = chosen.e + " " + chosen.label; $("#doWheel", el).hidden = false; Sound.chime(); }, reduceMotion ? 650 : 4100);
+      return;
+    }
+    if (e.target.closest("#doWheel") && chosen){ startSession([{ id:chosen.id, secs:chosen.secs }], null, "Ruleta"); }
+  };
+}
+
+/* =========================================================================
+   H. NAVEGACIÓN (pestañas + enlaces con #)
+   ========================================================================= */
+var TABS = ["pausa","juegos","equipo","plan","apoyo"];
+var RENDER = { pausa: renderHome };
+PCE.RENDER = RENDER;
+var lastRoute = "";
+function route(force){
+  var hash = (location.hash || "#pausa").slice(1).split("/"), tab = TABS.indexOf(hash[0]) >= 0 ? hash[0] : "pausa", sub = hash[1] || null;
+  var key = tab + "/" + (sub || "");
+  if (!force && key === lastRoute) return;
+  var changedTab = lastRoute.split("/")[0] !== tab;
+  lastRoute = key;
+  TABS.forEach(function(t){ $("#s-" + t).hidden = t !== tab; });
+  $$(".bottom-nav button").forEach(function(b){ if (b.getAttribute("data-tab") === tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  var el = $("#s-" + tab);
+  if (RENDER[tab]) RENDER[tab](el, sub);
+  if (changedTab){ window.scrollTo(0, 0); }
+}
+PCE.route = route; PCE.Store = Store; PCE.Sound = Sound; PCE.buzz = buzz; PCE.toast = toast; PCE.announce = announce;
+PCE.util = { $:$, $$:$$, esc:esc, h:h, fmt:fmt, shuffle:shuffle, pick:pick, dayKey:dayKey, verifyTag:verifyTag, reduceMotion:reduceMotion, clearAll:clearAll, MOODS:MOODS, ACT:ACT };
+$$(".bottom-nav button").forEach(function(b){ b.addEventListener("click", function(){ var t = b.getAttribute("data-tab"); if (location.hash === "#" + t) route(true); else location.hash = "#" + t; }); });
+window.addEventListener("hashchange", function(){ closeOverlay(); route(); });
+
+/* Panel de sonido */
+var panel = $("#soundPanel");
+$("#soundBtn").addEventListener("click", function(){ panel.hidden = !panel.hidden; if (!panel.hidden) $("#soundSeg button[aria-selected=true]").focus(); });
+$("#soundClose").addEventListener("click", function(){ panel.hidden = true; $("#soundBtn").focus(); });
+$$("#soundSeg button").forEach(function(b){ b.addEventListener("click", function(){ $$("#soundSeg button").forEach(function(x){ x.setAttribute("aria-selected", x === b); }); Sound.setMode(b.getAttribute("data-sound")); }); });
+var vt = $("#vibeToggle"); vt.checked = !!Store.data.prefs.vibe;
+vt.addEventListener("change", function(){ Store.data.prefs.vibe = vt.checked; Store.save(); if (vt.checked) buzz(30); });
+PCE.openSoundPanel = function(){ panel.hidden = false; window.scrollTo(0, 0); };
+
+/* Textos de marca desde CONFIG */
+$("#brandName").innerHTML = esc(CONFIG.appName) + " <span>" + esc(CONFIG.appSuffix) + "</span>";
+$("#brandTag").textContent = CONFIG.slogan;
+})();
+</script>
+<script>
+/* =========================================================================
+   I. MINI JUEGOS — cada uno: { icon, title, desc, mins, mount(stage) -> {destroy} }
+   Sin puntajes que presionen ni "game over". Todos usan requestAnimationFrame.
+   ========================================================================= */
+(function(){
+"use strict";
+var U = PCE.util, $ = U.$, $$ = U.$$, h = U.h, esc = U.esc, Sound = PCE.Sound;
+
+/* Lienzo con nitidez en pantallas retina y redimensión automática */
+function makeCanvas(wrap, onResize){
+  var c = $("canvas", wrap), ctx = c.getContext("2d"), o = { c:c, ctx:ctx, w:0, h:0 };
+  function size(){ var r = wrap.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2); o.w = r.width; o.h = r.height; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); if (onResize) onResize(o); }
+  var ro = window.ResizeObserver ? new ResizeObserver(size) : null; if (ro) ro.observe(wrap); else window.addEventListener("resize", size);
+  size(); o.stop = function(){ if (ro) ro.disconnect(); else window.removeEventListener("resize", size); };
+  return o;
+}
+function loop(fn){ var id, last = performance.now(), on = true; function f(now){ if (!on) return; var dt = Math.min(.05, (now - last) / 1000); last = now; fn(dt, now / 1000); id = requestAnimationFrame(f); } id = requestAnimationFrame(f); return function(){ on = false; cancelAnimationFrame(id); }; }
+function point(e, el){ var r = el.getBoundingClientRect(); return { x:e.clientX - r.left, y:e.clientY - r.top }; }
+
+var GAMES = {};
+
+/* ---------- a) Burbujas anti-estrés ---------- */
+GAMES.burbujas = { icon:"🫧", title:"Burbujas anti-estrés", desc:"Revienta burbujas y suelta la tensión", mins:2,
+  mount: function(stage){
+    stage.innerHTML = '<div class="game-stage" style="background:linear-gradient(180deg,var(--mint-50),var(--mint))"><canvas tabindex="0" role="img" aria-label="Burbujas flotando. Toca una para reventarla o presiona Espacio."></canvas><div class="game-hud"><span class="pill" aria-live="polite">Toca las burbujas 🫧</span><span class="pill small">💡 Vibración: botón 🔈</span></div></div>';
+    var wrap = $(".game-stage", stage), K = makeCanvas(wrap), ctx = K.ctx, bubbles = [], parts = [], spawnT = 0, popped = 0, pill = $(".pill", wrap);
+    var speed = U.reduceMotion ? .45 : 1, msgs = ["Así, suelta la tensión", "Respira mientras juegas", "Hombros abajo, mandíbula suelta", "Muy bien, a tu ritmo"];
+    function spawn(){ var r = 18 + Math.random() * 30; bubbles.push({ x:r + Math.random() * (K.w - 2 * r), y:K.h + r, r:r, vy:(22 + Math.random() * 26) * speed, ph:Math.random() * 6, a:0 }); }
+    for (var i = 0; i < 6; i++){ spawn(); bubbles[i].y = K.h * (.3 + Math.random() * .7); }
+    function pop(b){ bubbles.splice(bubbles.indexOf(b), 1); for (var k = 0; k < 10; k++){ var a = k / 10 * Math.PI * 2; parts.push({ x:b.x, y:b.y, vx:Math.cos(a) * 80, vy:Math.sin(a) * 80, life:.5 }); } popped++; Sound.pop(); PCE.buzz(15);
+      pill.textContent = popped % 10 === 0 ? U.pick(msgs) + " 🌿" : popped + (popped === 1 ? " burbuja soltada" : " burbujas soltadas"); }
+    var stop = loop(function(dt, t){
+      spawnT -= dt; if (spawnT <= 0 && bubbles.length < 16){ spawn(); spawnT = .55 + Math.random() * .5; }
+      ctx.clearRect(0, 0, K.w, K.h);
+      for (var i = bubbles.length - 1; i >= 0; i--){
+        var b = bubbles[i]; b.y -= b.vy * dt; b.a = Math.min(1, b.a + dt * 2);
+        var x = b.x + Math.sin(t * 1.2 + b.ph) * 8;
+        if (b.y < -b.r){ bubbles.splice(i, 1); continue; }
+        b.dx = x;
+        var g = ctx.createRadialGradient(x - b.r * .35, b.y - b.r * .35, b.r * .1, x, b.y, b.r);
+        g.addColorStop(0, "rgba(255,255,255," + .95 * b.a + ")"); g.addColorStop(.6, "rgba(207,232,222," + .35 * b.a + ")"); g.addColorStop(1, "rgba(54,118,111," + .35 * b.a + ")");
+        ctx.beginPath(); ctx.arc(x, b.y, b.r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+        ctx.lineWidth = 1.5; ctx.strokeStyle = "rgba(31,78,74," + .35 * b.a + ")"; ctx.stroke();
+        ctx.beginPath(); ctx.arc(x - b.r * .35, b.y - b.r * .4, b.r * .18, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,255,255," + .8 * b.a + ")"; ctx.fill();
+      }
+      for (var j = parts.length - 1; j >= 0; j--){ var p = parts[j]; p.life -= dt; if (p.life <= 0){ parts.splice(j, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fillStyle = "rgba(201,162,77," + p.life * 2 + ")"; ctx.fill(); }
+    });
+    function onDown(e){ var pt = point(e, K.c), hit = null, best = 1e9; bubbles.forEach(function(b){ var d = Math.hypot(pt.x - (b.dx || b.x), pt.y - b.y); if (d < b.r + 12 && d < best){ best = d; hit = b; } }); if (hit) pop(hit); }
+    function onKey(e){ if (e.key === " " || e.key === "Enter"){ e.preventDefault(); var top = bubbles.slice().sort(function(a, b){ return a.y - b.y; })[0]; if (top) pop(top); } }
+    K.c.addEventListener("pointerdown", onDown); K.c.addEventListener("keydown", onKey);
+    return { destroy:function(){ stop(); K.stop(); } };
+  } };
+
+/* ---------- b) Respira y sigue ---------- */
+GAMES.respira = { icon:"🌬️", title:"Respira y sigue", desc:"Sigue el círculo al ritmo 4-4-6", mins:2,
+  mount: function(stage){
+    stage.innerHTML = '<div class="act-wrap"><p class="act-hint" style="margin:0">Mantén el dedo en el círculo mientras <b>inhalas y sostienes</b>. Suéltalo al <b>exhalar</b>.</p><div class="bslot"></div><p class="act-step" aria-live="polite" style="min-height:2em;font-size:1.2rem">Toca el círculo para empezar</p><span class="pill">Ciclos: <b class="cyc">0</b></span></div>';
+    var bc = PCE.BreathCircle([4,4,6], { interactive:true }); $(".bslot", stage).appendChild(bc.el);
+    var fb = $(".act-step", stage), cyc = $(".cyc", stage), pressed = false, started = false, t = 0, lastMsg = "";
+    function down(e){ if (e && e.pointerId != null) { try { bc.el.setPointerCapture(e.pointerId); } catch(x){} } pressed = true; started = true; }
+    function up(){ pressed = false; }
+    bc.el.addEventListener("pointerdown", down); bc.el.addEventListener("pointerup", up); bc.el.addEventListener("pointercancel", up);
+    bc.el.addEventListener("keydown", function(e){ if (e.key === " " || e.key === "Enter"){ e.preventDefault(); if (!e.repeat) down(); } });
+    bc.el.addEventListener("keyup", function(e){ if (e.key === " " || e.key === "Enter") up(); });
+    bc.el.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+    bc.update(0);
+    var stop = loop(function(dt){
+      if (!started) return;
+      t += dt; var ph = bc.update(t), want = ph.p.k === "in" || ph.p.k === "hold", ok = want === pressed;
+      bc.core.classList.toggle("sync", ok);
+      var msg = ok ? (want ? "¡Vas al ritmo! 🌿" : "Exhala despacio… muy bien") : (want ? "Pon el dedo en el círculo e inhala" : "Suelta el dedo y exhala");
+      if (msg !== lastMsg){ fb.textContent = msg; lastMsg = msg; }
+      cyc.textContent = Math.floor(t / bc.cycle);
+    });
+    return { destroy:function(){ stop(); } };
+  } };
+
+/* ---------- c) Jardín zen ---------- */
+GAMES.jardin = { icon:"🪨", title:"Jardín zen", desc:"Dibuja surcos en la arena", mins:3,
+  mount: function(stage){
+    stage.innerHTML = '<div class="game-stage"><canvas role="img" aria-label="Arena para dibujar surcos con el dedo"></canvas><div class="game-hud"><div class="seg" role="tablist" aria-label="Herramienta" style="margin:0;background:rgba(255,255,255,.9)"><button role="tab" aria-selected="true" data-tool="rake">🔱 Rastrillo</button><button role="tab" aria-selected="false" data-tool="finger">☝️ Dedo</button><button role="tab" aria-selected="false" data-tool="stone">🪨 Piedra</button></div><button class="pill" data-smooth>Alisar</button></div></div>';
+    var wrap = $(".game-stage", stage), sand = document.createElement("canvas"), tool = "rake", drawing = false, lastP = null;
+    function makeSand(w, hh){ sand.width = w; sand.height = hh; var s = sand.getContext("2d"); s.fillStyle = "#EADFC7"; s.fillRect(0, 0, w, hh);
+      for (var i = 0; i < w * hh / 18; i++){ var v = Math.random(); s.fillStyle = v > .5 ? "rgba(255,255,255,.35)" : "rgba(150,120,80,.18)"; s.fillRect(Math.random() * w, Math.random() * hh, 1.2, 1.2); } }
+    var K = makeCanvas(wrap, function(o){ makeSand(Math.ceil(o.w), Math.ceil(o.h)); o.ctx.drawImage(sand, 0, 0); });
+    var ctx = K.ctx;
+    function groove(x0, y0, x1, y1, w){ ctx.lineCap = "round"; ctx.lineWidth = w; ctx.strokeStyle = "rgba(140,110,70,.28)"; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+      ctx.lineWidth = w * .45; ctx.strokeStyle = "rgba(255,255,255,.45)"; ctx.beginPath(); ctx.moveTo(x0 - 1.2, y0 - 1.2); ctx.lineTo(x1 - 1.2, y1 - 1.2); ctx.stroke(); }
+    function stroke(a, b){
+      if (tool === "finger"){ groove(a.x, a.y, b.x, b.y, 9); return; }
+      var dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
+      for (var k = -2; k <= 2; k++){ var o = k * 11; groove(a.x + nx * o, a.y + ny * o, b.x + nx * o, b.y + ny * o, 4); }
+    }
+    function stone(p){ var r = 18 + Math.random() * 14;
+      for (var k = 3; k >= 1; k--){ ctx.beginPath(); ctx.arc(p.x, p.y, r + k * 11, 0, Math.PI * 2); ctx.lineWidth = 4; ctx.strokeStyle = "rgba(140,110,70,.25)"; ctx.stroke(); ctx.beginPath(); ctx.arc(p.x - 1, p.y - 1, r + k * 11, 0, Math.PI * 2); ctx.lineWidth = 1.5; ctx.strokeStyle = "rgba(255,255,255,.45)"; ctx.stroke(); }
+      var g = ctx.createRadialGradient(p.x - r * .4, p.y - r * .4, 2, p.x, p.y, r); g.addColorStop(0, "#9AA5A0"); g.addColorStop(1, "#4F5C58");
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * .82, .3, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill(); Sound.tone(220, .6, .05); }
+    K.c.addEventListener("pointerdown", function(e){ var p = point(e, K.c); if (tool === "stone"){ stone(p); return; } drawing = true; lastP = p; try { K.c.setPointerCapture(e.pointerId); } catch(x){} });
+    K.c.addEventListener("pointermove", function(e){ if (!drawing) return; var p = point(e, K.c); if (Math.hypot(p.x - lastP.x, p.y - lastP.y) < 3) return; stroke(lastP, p); lastP = p; });
+    ["pointerup","pointercancel"].forEach(function(ev){ K.c.addEventListener(ev, function(){ drawing = false; }); });
+    var smoothing = null;
+    wrap.addEventListener("click", function(e){
+      var t = e.target.closest("[data-tool]"); if (t){ tool = t.getAttribute("data-tool"); $$("[data-tool]", wrap).forEach(function(b){ b.setAttribute("aria-selected", b === t); }); }
+      if (e.target.closest("[data-smooth]")){ var a = 0; if (smoothing) smoothing(); Sound.tone(300, 1.2, .04);
+        smoothing = loop(function(dt){ a += dt * (U.reduceMotion ? 6 : 1.4); ctx.globalAlpha = Math.min(1, a * .35); ctx.drawImage(sand, 0, 0); ctx.globalAlpha = 1; if (a >= 1.2){ ctx.drawImage(sand, 0, 0); smoothing(); smoothing = null; } }); }
+    });
+    return { destroy:function(){ if (smoothing) smoothing(); K.stop(); } };
+  } };
+
+/* ---------- d) Suelta tu preocupación (no se guarda nada) ---------- */
+GAMES.suelta = { icon:"🗑️", title:"Suelta tu preocupación", desc:"Escríbela, arrúgala y suéltala", mins:1,
+  mount: function(stage){
+    stage.innerHTML = '<div class="worry"><p class="notice mint small">🔒 Lo que escribas aquí <b>no se guarda ni se envía</b>. Se borra al soltarlo.</p>' +
+      '<div class="paper"><label class="sr-only" for="worryTxt">¿Qué te pesa hoy?</label><textarea id="worryTxt" maxlength="400" placeholder="¿Qué te pesa hoy? Escríbelo aquí…"></textarea></div>' +
+      '<button class="btn btn-primary btn-block" data-throw>Arrugar y soltar 🗑️</button>' +
+      '<svg class="bin" viewBox="0 0 110 120" aria-hidden="true"><g class="lid"><rect x="12" y="18" width="86" height="10" rx="5" fill="#1F4E4A"/><rect x="44" y="10" width="22" height="10" rx="4" fill="#1F4E4A"/></g><path d="M20 32h70l-7 80H27z" fill="#36766F"/><path d="M40 44v56M55 44v56M70 44v56" stroke="#CFE8DE" stroke-width="4" stroke-linecap="round"/></svg>' +
+      '<p class="act-step" aria-live="polite" style="min-height:2.4em;font-size:1.15rem"></p></div>';
+    var paper = $(".paper", stage), ta = $("textarea", stage), bin = $(".bin", stage), msg = $(".act-step", stage), timers = [], busy = false;
+    var lines = ["Listo. Por ahora, ya no tienes que cargarlo.", "Respira. No tienes que resolverlo todo hoy.", "Lo soltaste. Date permiso de descansar un momento.", "Bien hecho. Si vuelve, puedes soltarlo otra vez.", "Si este peso sigue contigo, hablarlo con alguien de confianza ayuda."];
+    function later(fn, ms){ timers.push(setTimeout(fn, U.reduceMotion ? Math.min(ms, 200) : ms)); }
+    $("[data-throw]", stage).addEventListener("click", function(){
+      if (busy) return;
+      if (!ta.value.trim()){ PCE.toast("Escribe algo primero, aunque sea una palabra."); ta.focus(); return; }
+      busy = true; msg.textContent = ""; paper.classList.add("crumple"); Sound.tone(180, .5, .05); PCE.buzz(25);
+      later(function(){ bin.classList.add("open"); paper.classList.add("throw"); }, 1000);
+      later(function(){ ta.value = ""; Sound.tone(140, .4, .06); PCE.buzz([20, 40, 20]); bin.classList.remove("open"); paper.style.transition = "none"; paper.classList.remove("crumple", "throw"); paper.style.opacity = "0"; }, 2150);
+      later(function(){ paper.style.transition = ""; paper.style.opacity = "1"; msg.textContent = U.pick(lines); busy = false; }, 2300);
+    });
+    return { destroy:function(){ timers.forEach(clearTimeout); ta.value = ""; } };
+  } };
+
+/* ---------- e) Atrapa lo bueno ---------- */
+GAMES.atrapa = { icon:"✨", title:"Atrapa lo bueno", desc:"Toca las palabras que te representan hoy", mins:2,
+  mount: function(stage){
+    var WORDS = ["Calma","Gratitud","Paciencia","Fuerza","Alegría","Equipo","Esperanza","Descanso","Creatividad","Amabilidad","Enfoque","Valentía","Equilibrio","Confianza","Serenidad","Energía","Empatía","Orgullo","Respeto","Humor","Constancia","Ternura","Curiosidad","Familia","Logro","Aprendizaje"];
+    stage.innerHTML = '<div class="game-stage" style="background:linear-gradient(180deg,var(--cream),var(--mint-50))"><div class="game-hud"><span class="pill">Toca las que te representan hoy</span></div><div class="fall"></div></div><div class="collected" aria-live="polite"><span class="small muted">Hoy me representa:</span></div>';
+    var wrap = $(".game-stage", stage), fall = $(".fall", stage), col = $(".collected", stage), items = [], spawnT = 0, got = [], bag = U.shuffle(WORDS), speed = U.reduceMotion ? .5 : 1;
+    function spawn(){ if (!bag.length) bag = U.shuffle(WORDS.filter(function(w){ return got.indexOf(w) < 0; })); var w = bag.pop(); if (!w) return;
+      var el = h('<button class="word">' + esc(w) + '</button>'); fall.appendChild(el);
+      var W = wrap.clientWidth, ew = el.offsetWidth; var it = { el:el, w:w, x:Math.random() * Math.max(10, W - ew - 10) + 5, y:-50, vy:(26 + Math.random() * 20) * speed, ph:Math.random() * 6 };
+      el.addEventListener("click", function(){ if (it.dead) return; it.dead = true; el.classList.add("got"); el.style.opacity = "0"; Sound.chime(); PCE.buzz(15);
+        if (got.indexOf(w) < 0){ got.push(w); col.appendChild(h('<span class="badge">' + esc(w) + '</span>')); }
+        if (got.length === 5) PCE.toast("✨ Hoy te representa: " + got.join(", "));
+        setTimeout(function(){ el.remove(); }, 600); });
+      items.push(it); }
+    var stop = loop(function(dt, t){
+      spawnT -= dt; if (spawnT <= 0){ spawn(); spawnT = 1.3 + Math.random() * .8; }
+      var H = wrap.clientHeight;
+      for (var i = items.length - 1; i >= 0; i--){ var it = items[i]; if (it.dead){ items.splice(i, 1); continue; }
+        it.y += it.vy * dt; var x = it.x + Math.sin(t + it.ph) * 10; it.el.style.transform = "translate(" + x.toFixed(1) + "px," + it.y.toFixed(1) + "px)";
+        if (it.y > H + 20){ it.el.remove(); items.splice(i, 1); } }
+    });
+    return { destroy:function(){ stop(); } };
+  } };
+
+/* ---------- f) Memoria del bienestar ---------- */
+GAMES.memoria = { icon:"🃏", title:"Memoria del bienestar", desc:"Encuentra las parejas de hábitos sanos", mins:2,
+  mount: function(stage){
+    var H = [
+      { k:"agua", e:"💧", l:"Agua", tip:"Tomar agua durante la jornada te ayuda a mantener la energía y la concentración." },
+      { k:"pausa", e:"⏸️", l:"Pausa", tip:"Pausas cortas y frecuentes ayudan a recuperar la atención." },
+      { k:"sueno", e:"😴", l:"Sueño", tip:"Dormir bien es la base para manejar mejor el estrés." },
+      { k:"respirar", e:"🌬️", l:"Respirar", tip:"Exhalar más largo que al inhalar ayuda a calmar el cuerpo." },
+      { k:"caminar", e:"🚶", l:"Caminar", tip:"Unos minutos de caminata despejan la mente." },
+      { k:"desconectar", e:"📵", l:"Desconectar", tip:"Silenciar notificaciones fuera de horario protege tu descanso." }
+    ];
+    function deal(){
+      var cards = U.shuffle(H.concat(H)), open = [], lock = false, matched = 0;
+      stage.innerHTML = '<div class="act-hint center" style="padding:12px 16px 0;margin:0 auto">Voltea dos cartas. Sin prisa, sin tiempo límite.</div><div class="mem-grid">' + cards.map(function(c, i){ return '<button class="mcard" data-i="' + i + '" aria-label="Carta ' + (i + 1) + ', boca abajo"><div class="in"><div class="f"></div><div class="b"><span class="e" aria-hidden="true">' + c.e + '</span>' + c.l + '</div></div></button>'; }).join("") + '</div><p class="act-step center" aria-live="polite" style="min-height:2.4em;font-size:1.05rem;padding:0 16px;margin:0 auto"></p>';
+      var msg = $(".act-step", stage);
+      $(".mem-grid", stage).addEventListener("click", function(e){
+        var b = e.target.closest(".mcard"); if (!b || lock || b.classList.contains("flip")) return;
+        var c = cards[+b.getAttribute("data-i")]; b.classList.add("flip"); b.setAttribute("aria-label", c.l); Sound.tone(520, .2, .04); open.push(b);
+        if (open.length === 2){
+          var a = cards[+open[0].getAttribute("data-i")];
+          if (a.k === c.k){ open.forEach(function(x){ x.classList.add("match"); x.setAttribute("aria-label", c.l + ", pareja encontrada"); }); open = []; matched++; msg.textContent = c.e + " " + c.tip; Sound.chime(); PCE.buzz(20);
+            if (matched === H.length){ setTimeout(function(){ msg.innerHTML = '¡Completaste las parejas! Elige un hábito para hoy 🌿<br><button class="btn btn-soft btn-sm" style="margin-top:10px" data-again>Mezclar de nuevo</button>'; }, 700); }
+          } else { lock = true; setTimeout(function(){ open.forEach(function(x){ x.classList.remove("flip"); x.setAttribute("aria-label", "Carta boca abajo"); }); open = []; lock = false; }, U.reduceMotion ? 600 : 1100); }
+        }
+      });
+      msg.addEventListener("click", function(e){ if (e.target.closest("[data-again]")) deal(); });
+    }
+    deal();
+    return { destroy:function(){} };
+  } };
+
+/* ---------- g) ¿Mito o realidad? ---------- */
+var QUIZ = [
+  { q:"El burnout es una enfermedad mental.", a:false, e:"La OMS lo incluye en la CIE-11 como un “fenómeno ocupacional”, no como una condición médica. Aun así, merece atención y apoyo." },
+  { q:"Un poco de estrés puntual puede ayudarte a responder ante un reto.", a:true, e:"El estrés breve nos activa. El problema aparece cuando es constante y no hay tiempo para recuperarse." },
+  { q:"Si tomo pausas, soy menos productivo.", a:false, e:"Las pausas cortas ayudan a recuperar la atención y la energía. Descansar también es parte del trabajo bien hecho." },
+  { q:"El burnout se relaciona con estrés crónico en el trabajo que no se ha manejado bien.", a:true, e:"Así lo describe la OMS: agotamiento, distancia mental del trabajo y sensación de menor eficacia." },
+  { q:"El estrés y el burnout solo les pasan a las personas débiles.", a:false, e:"Le puede pasar a cualquiera. Influyen la carga, la organización del trabajo y el apoyo disponible." },
+  { q:"Dormir mal puede aumentar la sensación de estrés.", a:true, e:"El descanso y el estrés se influyen mutuamente. Cuidar el sueño es cuidar tu capacidad de afrontar el día." },
+  { q:"Unas vacaciones lo resuelven todo, aunque al volver la carga siga igual.", a:false, e:"Descansar ayuda mucho, pero si las causas siguen igual, el cansancio puede volver. También hay que ajustar lo de fondo." },
+  { q:"La forma en que se organiza el trabajo influye en el estrés del equipo.", a:true, e:"La OMS y la OIT señalan que la carga, el control sobre las tareas y el apoyo son factores clave." },
+  { q:"Hablar de cómo me siento con alguien de confianza no sirve de nada.", a:false, e:"Compartir lo que sentimos alivia y nos ayuda a ver opciones. Pedir apoyo es una fortaleza." },
+  { q:"Sentirse distante o indiferente con el trabajo puede ser una señal de burnout.", a:true, e:"Es una de sus tres dimensiones. Si lo notas seguido, vale la pena prestarle atención." }
+];
+GAMES.mito = { icon:"❓", title:"¿Mito o realidad?", desc:"10 ideas rápidas sobre estrés y burnout", mins:3,
+  mount: function(stage){
+    var i = 0, qs = QUIZ.slice();
+    function show(){
+      if (i >= qs.length){ stage.innerHTML = '<div class="quiz center"><div class="act-emoji" aria-hidden="true">🎓</div><h2>¡Listo!</h2><p>Repasaste 10 ideas sobre estrés y burnout. Cada respuesta, acertada o no, suma a lo que sabes.</p><a class="btn btn-soft" href="#apoyo/entender">Aprender más</a><button class="btn btn-ghost" data-again>Repetir</button></div>';
+        $("[data-again]", stage).onclick = function(){ i = 0; show(); }; return; }
+      var it = qs[i];
+      stage.innerHTML = '<div class="quiz"><div class="steps-dots" aria-hidden="true">' + qs.map(function(_, k){ return '<i class="' + (k < i ? "done" : k === i ? "on" : "") + '"></i>'; }).join("") + '</div><p class="small muted center" style="margin:0">Pregunta ' + (i + 1) + ' de ' + qs.length + '</p><p class="q">' + esc(it.q) + '</p>' +
+        '<div class="grid2"><button class="btn btn-ghost btn-xl" data-ans="0">🙅 Mito</button><button class="btn btn-primary btn-xl" data-ans="1">✅ Realidad</button></div><div class="fb" aria-live="polite"></div></div>';
+      $$("[data-ans]", stage).forEach(function(b){ b.onclick = function(){
+        var ans = b.getAttribute("data-ans") === "1", ok = ans === it.a;
+        $$("[data-ans]", stage).forEach(function(x){ x.disabled = true; });
+        $(".fb", stage).innerHTML = '<div class="feedback ' + (ok ? "good" : "learn") + '"><b>' + (ok ? "¡Exacto! " : "¡Dato útil! ") + 'Es ' + (it.a ? "realidad" : "un mito") + '.</b><p style="margin:.4em 0 0">' + esc(it.e) + '</p></div><button class="btn btn-gold btn-block" style="margin-top:12px" data-next>' + (i < qs.length - 1 ? "Siguiente" : "Terminar") + ' ▶</button>';
+        Sound.tone(ok ? 660 : 440, .4, .05); var n = $("[data-next]", stage); n.focus(); n.onclick = function(){ i++; show(); };
+      }; });
+    }
+    show();
+    return { destroy:function(){} };
+  } };
+PCE.QUIZ = QUIZ;
+
+/* ---------- h) Colorea un mandala ---------- */
+GAMES.mandala = { icon:"🌸", title:"Colorea un mandala", desc:"Toca las zonas para llenarlas de color", mins:3,
+  mount: function(stage){
+    var COLORS = ["#1F4E4A","#36766F","#7FB8A4","#CFE8DE","#C9A24D","#F3E6C4","#E8B4A0","#A9C4E4","#C7B8E0","#FFFFFF"];
+    var NAMES = ["Verde profundo","Verde azulado","Salvia","Menta","Dorado","Arena","Durazno","Cielo","Lavanda","Blanco (borrar)"];
+    var color = COLORS[2], sym = false, svg = "", z = 0;
+    function zone(d, ring){ z++; return '<path d="' + d + '" data-ring="' + ring + '" fill="#FFFFFF" tabindex="0" role="button" aria-label="Zona ' + z + '"/>'; }
+    function rot(d, a, ring){ z++; return '<path d="' + d + '" transform="rotate(' + a + ')" data-ring="' + ring + '" fill="#FFFFFF" tabindex="0" role="button" aria-label="Zona ' + z + '"/>'; }
+    function sector(r0, r1, a0, a1){ var c = Math.PI / 180, p = function(r, a){ return (r * Math.cos((a - 90) * c)).toFixed(2) + " " + (r * Math.sin((a - 90) * c)).toFixed(2); };
+      return "M" + p(r0, a0) + " L" + p(r1, a0) + " A" + r1 + " " + r1 + " 0 0 1 " + p(r1, a1) + " L" + p(r0, a1) + " A" + r0 + " " + r0 + " 0 0 0 " + p(r0, a0) + " Z"; }
+    svg += zone("M-180 0a180 180 0 1 0 360 0a180 180 0 1 0 -360 0Z", "bg");
+    for (var i = 0; i < 24; i++) svg += zone(sector(158, 176, i * 15, (i + 1) * 15), "r6");
+    for (i = 0; i < 12; i++) svg += rot("M0 -98 C 18 -112 20 -136 0 -154 C -20 -136 -18 -112 0 -98 Z", i * 30, "r4");
+    for (i = 0; i < 12; i++){ var a = (i * 30 + 15 - 90) * Math.PI / 180, cx = (138 * Math.cos(a)).toFixed(1), cy = (138 * Math.sin(a)).toFixed(1); svg += zone("M" + (cx - 10) + " " + cy + "a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z", "r5"); }
+    for (i = 0; i < 16; i++) svg += zone(sector(80, 96, i * 22.5, (i + 1) * 22.5), "r3");
+    for (i = 0; i < 8; i++) svg += rot("M0 -26 C 16 -40 16 -62 0 -78 C -16 -62 -16 -40 0 -26 Z", i * 45, "r1");
+    for (i = 0; i < 8; i++) svg += rot("M0 -34 C 9 -44 9 -56 0 -66 C -9 -56 -9 -44 0 -34 Z", i * 45 + 22.5, "r2");
+    svg += zone("M-22 0a22 22 0 1 0 44 0a22 22 0 1 0 -44 0Z", "c");
+    stage.innerHTML = '<div class="mandala-wrap"><svg viewBox="-185 -185 370 370" aria-label="Mandala para colorear">' + svg + '</svg>' +
+      '<div class="palette" role="radiogroup" aria-label="Colores">' + COLORS.map(function(c, k){ return '<button class="swatch" role="radio" aria-checked="' + (c === color) + '" aria-label="' + NAMES[k] + '" data-c="' + c + '" style="background:' + c + '"></button>'; }).join("") + '</div>' +
+      '<div class="row" style="justify-content:center"><button class="btn btn-soft btn-sm" data-sym aria-pressed="false">🔁 Simetría: no</button><button class="btn btn-ghost btn-sm" data-clear>Limpiar</button></div></div>';
+    var root = $(".mandala-wrap", stage);
+    function fill(p){ var targets = sym && p.getAttribute("data-ring") !== "bg" ? $$('[data-ring="' + p.getAttribute("data-ring") + '"]', root) : [p]; targets.forEach(function(t){ t.setAttribute("fill", color); }); Sound.tone(392 + Math.random() * 200, .5, .03); }
+    root.addEventListener("click", function(e){
+      var p = e.target.closest("svg path"); if (p){ fill(p); return; }
+      var s = e.target.closest("[data-c]"); if (s){ color = s.getAttribute("data-c"); $$("[data-c]", root).forEach(function(b){ b.setAttribute("aria-checked", b === s); }); return; }
+      var y = e.target.closest("[data-sym]"); if (y){ sym = !sym; y.setAttribute("aria-pressed", sym); y.textContent = "🔁 Simetría: " + (sym ? "sí" : "no"); return; }
+      if (e.target.closest("[data-clear]")) $$("svg path", root).forEach(function(p){ p.setAttribute("fill", "#FFFFFF"); });
+    });
+    root.addEventListener("keydown", function(e){ var p = e.target.closest && e.target.closest("svg path"); if (p && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); fill(p); } });
+    return { destroy:function(){} };
+  } };
+
+PCE.GAMES = GAMES;
+
+/* Abrir un juego en pantalla completa con "Terminar pausa" siempre visible */
+function openGame(id){
+  var g = GAMES[id], start = performance.now(), nudged = false;
+  var ov = h('<div class="overlay" role="dialog" aria-modal="true" aria-label="' + esc(g.title) + '"><div class="ov-top"><div class="ov-title">' + g.icon + ' ' + esc(g.title) + '<small>Sugerido: ' + g.mins + ' min · <span class="el">0:00</span></small></div><button class="btn-end" data-end data-autofocus>Terminar pausa</button></div><div class="ov-body"></div></div>');
+  var body = $(".ov-body", ov), inst = g.mount(body), el = $(".el", ov);
+  var t = setInterval(function(){ var s = (performance.now() - start) / 1000; el.textContent = U.fmt(s); if (!nudged && s >= g.mins * 60){ nudged = true; PCE.toast("🌿 Ya cumpliste tu pausa. Puedes seguir o terminar."); Sound.chime(); } }, 500);
+  function end(){ clearInterval(t); if (inst && inst.destroy) inst.destroy(); inst = null; var s = (performance.now() - start) / 1000; ov._spent = function(){ return s; }; PCE.showClosing(ov, null); }
+  ov.addEventListener("click", function(e){ if (e.target.closest("[data-end]")) end(); });
+  ov._destroy = function(){ clearInterval(t); if (inst && inst.destroy) inst.destroy(); };
+  ov._esc = end;
+  PCE.openOverlay(ov);
+}
+PCE.openGame = openGame;
+
+PCE.RENDER.juegos = function(el){
+  var ids = ["burbujas","respira","jardin","suelta","atrapa","memoria","mito","mandala"];
+  el.innerHTML = '<p class="eyebrow">Mini juegos</p><h1 id="t-juegos">Juega 1 a 3 minutos</h1><p class="muted">Sin puntajes, sin prisa y sin “game over”. Solo un respiro para tu mente.</p>' +
+    '<div class="game-grid">' + ids.map(function(id){ var g = GAMES[id]; return '<button class="game-card" data-game="' + id + '"><span class="gi" aria-hidden="true">' + g.icon + '</span><b>' + esc(g.title) + '</b><span>' + esc(g.desc) + ' · ' + g.mins + ' min</span></button>'; }).join("") + '</div>' +
+    '<div class="notice" style="margin-top:16px"><span aria-hidden="true">🎧</span><div>Sonido opcional y apagado por defecto. Si lo activas, usa audífonos. <button class="btn btn-soft btn-sm" style="margin-top:8px" data-sound>Opciones de sonido y vibración</button></div></div>';
+  el.onclick = function(e){ var b = e.target.closest("[data-game]"); if (b) openGame(b.getAttribute("data-game")); if (e.target.closest("[data-sound]")) PCE.openSoundPanel(); };
+};
+})();
+</script>
+<script>
+/* =========================================================================
+   J. PAUSA EN EQUIPO (modo facilitador, pensado para proyectar)
+   ========================================================================= */
+(function(){
+"use strict";
+var U = PCE.util, $ = U.$, $$ = U.$$, h = U.h, esc = U.esc, Sound = PCE.Sound, Store = PCE.Store;
+var TEAM = [
+  { id:"stretch", icon:"🙆", title:"Estiramiento sincronizado", desc:"7 movimientos para todo el grupo", steps:[
+    { t:"Todos de pie", x:"Separen un poco los pies y suelten los hombros.", s:20 },
+    { t:"Cuello a la derecha", x:"Oreja hacia el hombro. Respiren juntos.", s:25 },
+    { t:"Cuello a la izquierda", x:"Ahora hacia el otro lado, sin forzar.", s:25 },
+    { t:"Hombros en círculos", x:"Hacia atrás 5 veces y hacia adelante 5 veces.", s:30 },
+    { t:"Brazos al cielo", x:"Entrelacen los dedos, estiren hacia arriba e inclínense suave a cada lado.", s:30 },
+    { t:"Giro de torso", x:"Manos en la cintura. Giren despacio a la derecha y a la izquierda.", s:30 },
+    { t:"Sacudan todo", x:"Manos, brazos y piernas. ¡Y una sonrisa!", s:20 } ] },
+  { id:"breath", icon:"🌬️", title:"Respiración colectiva", desc:"Respiren juntos al ritmo 4-4-6", steps:[
+    { t:"Lleguen al momento", x:"Siéntense cómodos, pies en el piso, ojos cerrados o mirada baja.", s:20 },
+    { t:"Respiren juntos", x:"Sigan el círculo: inhalen 4, sostengan 4, exhalen 6.", s:140, breath:[4,4,6] },
+    { t:"Vuelvan despacio", x:"Muevan los dedos, abran los ojos y noten cómo se sienten.", s:20 } ] },
+  { id:"gratitude", icon:"💛", title:"Dinámica de gratitud", desc:"Cada quien comparte algo bueno", steps:[
+    { t:"Piensen en algo bueno", x:"De esta semana: una persona, un logro pequeño o un momento agradable.", s:45 },
+    { t:"Ronda de gratitud", x:"Cada persona lo comparte en una frase. Solo escuchamos, sin comentar.", s:210 },
+    { t:"Gracias a alguien del equipo", x:"¿A quién quieren agradecerle algo hoy? Díganselo.", s:45 },
+    { t:"Cierre", x:"Lo bueno se nota más cuando lo decimos. ¡Gracias, equipo!", s:15 } ] },
+  { id:"walk", icon:"🚶", title:"Caminata de 5 minutos", desc:"Salgan a moverse con calma", steps:[
+    { t:"Preparados", x:"Dejen el celular y la computadora. Pónganse de pie.", s:20 },
+    { t:"Caminen a paso tranquilo", x:"Por el pasillo, el patio o la cuadra. Noten sus pasos.", s:120 },
+    { t:"Observen alrededor", x:"Busquen 3 cosas que no habían notado antes.", s:90 },
+    { t:"Regreso con calma", x:"Vuelvan despacio y respiren profundo antes de sentarse.", s:70 } ] },
+  { id:"water", icon:"💧", title:"Reto de agua", desc:"Hidratación en equipo", steps:[
+    { t:"Todos por un vaso de agua", x:"Esperamos a que cada persona tenga su vaso.", s:60 },
+    { t:"¡Salud por el equipo!", x:"Brinden y beban despacio.", s:30 },
+    { t:"Dato rápido", x:"Tener una botella cerca ayuda a acordarse de tomar agua en la jornada.", s:20 },
+    { t:"Compromiso del día", x:"¿Cuántos vasos más tomaremos hoy? Elijan un número entre todos.", s:30 } ] }
+];
+function total(a){ return a.steps.reduce(function(s, x){ return s + x.s; }, 0); }
+var closingSound = true;
+
+function openTeam(act){
+  var i = 0, left = 0, paused = false, last = performance.now(), ended = false, bc = null, bt = 0;
+  var ov = h('<div class="overlay dark" role="dialog" aria-modal="true" aria-label="' + esc(act.title) + '"><div class="ov-top"><div class="ov-title">' + act.icon + ' ' + esc(act.title) + '<small>Modo facilitador · ← → para moverte, espacio para pausar</small></div><button class="btn-end" data-a="exit" data-autofocus>Salir</button></div>' +
+    '<div class="ov-body"><div class="team-view"><div class="team-step-n"></div><div class="team-title" aria-live="polite"></div><div class="bslot"></div><div class="team-timer" aria-hidden="true">0:00</div><div class="team-text"></div><div class="steps-dots" aria-hidden="true"></div></div></div>' +
+    '<div class="ov-foot"><button class="btn btn-light btn-sm" data-a="prev">◀ Anterior</button><button class="btn btn-soft btn-sm" data-a="pause" aria-pressed="false">⏸ Pausar</button><button class="btn btn-gold btn-sm" data-a="next">Siguiente ▶</button>' +
+    '<button class="btn btn-light btn-sm" data-a="sound" aria-pressed="' + closingSound + '">🔔 Sonido de cierre: ' + (closingSound ? "sí" : "no") + '</button><button class="btn btn-light btn-sm" data-a="fs">⛶ Pantalla completa</button></div></div>');
+  var tv = $(".team-view", ov), timerEl = $(".team-timer", ov), slot = $(".bslot", ov);
+  function show(){
+    var st = act.steps[i]; left = st.s; ended = false; bt = 0;
+    $(".team-step-n", ov).textContent = "Paso " + (i + 1) + " de " + act.steps.length;
+    $(".team-title", ov).textContent = st.t; $(".team-text", ov).textContent = st.x;
+    $(".steps-dots", ov).innerHTML = act.steps.map(function(_, k){ return '<i class="' + (k < i ? "done" : k === i ? "on" : "") + '"></i>'; }).join("");
+    slot.innerHTML = ""; bc = null;
+    if (st.breath){ bc = PCE.BreathCircle(st.breath); slot.appendChild(bc.el); bc.update(0); timerEl.style.fontSize = "clamp(2.5rem,8vw,5rem)"; } else timerEl.style.fontSize = "";
+    timerEl.classList.remove("end"); timerEl.textContent = U.fmt(left);
+    $("[data-a=next]", ov).textContent = i < act.steps.length - 1 ? "Siguiente ▶" : "Finalizar ✓";
+  }
+  function finishAll(){
+    clearInterval(tick);
+    $(".ov-body", ov).innerHTML = '<div class="team-view"><div style="font-size:5rem" aria-hidden="true">🌿</div><div class="team-title">¡Gracias, equipo!</div><div class="team-text">' + esc(CONFIG.slogan) + '</div><button class="btn btn-gold btn-xl" data-a="exit" style="margin-top:20px">Volver</button></div>';
+    var f = $(".ov-foot", ov); if (f) f.remove(); if (closingSound) Sound.gong();
+  }
+  function go(d){ var n = i + d; if (n < 0) return; if (n >= act.steps.length){ finishAll(); return; } i = n; show(); Sound.tone(523, .5, .05); }
+  var tick = setInterval(function(){
+    var now = performance.now(), dt = (now - last) / 1000; last = now;
+    if (paused) return;
+    if (bc){ bt += dt; bc.update(bt); }
+    if (ended) return;
+    left -= dt;
+    if (left <= 0){ left = 0; ended = true; timerEl.textContent = "¡Tiempo!"; timerEl.classList.add("end"); if (closingSound) Sound.gong(); PCE.announce("Tiempo. Avanza al siguiente paso cuando el grupo esté listo."); return; }
+    timerEl.textContent = U.fmt(left);
+  }, 200);
+  ov.addEventListener("click", function(e){
+    var b = e.target.closest("[data-a]"); if (!b) return; var a = b.getAttribute("data-a");
+    if (a === "exit"){ if (document.fullscreenElement) document.exitFullscreen(); PCE.closeOverlay(); }
+    if (a === "next") go(1);
+    if (a === "prev") go(-1);
+    if (a === "pause"){ paused = !paused; b.setAttribute("aria-pressed", paused); b.textContent = paused ? "▶ Continuar" : "⏸ Pausar"; }
+    if (a === "sound"){ closingSound = !closingSound; b.setAttribute("aria-pressed", closingSound); b.textContent = "🔔 Sonido de cierre: " + (closingSound ? "sí" : "no"); if (closingSound) Sound.chime(true); }
+    if (a === "fs"){ if (!document.fullscreenElement && ov.requestFullscreen) ov.requestFullscreen().catch(function(){}); else if (document.exitFullscreen) document.exitFullscreen(); }
+  });
+  function onKey(e){
+    if (e.target.closest && e.target.closest("button") && (e.key === " " || e.key === "Enter")) return;
+    if (e.key === "ArrowRight"){ e.preventDefault(); go(1); }
+    if (e.key === "ArrowLeft"){ e.preventDefault(); go(-1); }
+    if (e.key === " "){ e.preventDefault(); $("[data-a=pause]", ov) && $("[data-a=pause]", ov).click(); }
+  }
+  document.addEventListener("keydown", onKey);
+  ov._destroy = function(){ clearInterval(tick); document.removeEventListener("keydown", onKey); };
+  ov._esc = function(){ if (!document.fullscreenElement) PCE.closeOverlay(); };
+  PCE.openOverlay(ov); show();
+}
+
+PCE.RENDER.equipo = function(el){
+  el.innerHTML = '<p class="eyebrow">Pausa en equipo</p><h1 id="t-equipo">Modo facilitador</h1><p class="muted">Proyecta esta pantalla en la reunión. Letra grande, temporizador visible y pasos guiados. Tú decides cuándo avanzar.</p>' +
+    TEAM.map(function(a){ return '<button class="team-card" data-team="' + a.id + '"><span class="gi" aria-hidden="true">' + a.icon + '</span><span><b>' + esc(a.title) + '</b><span class="small muted">' + esc(a.desc) + ' · ' + Math.round(total(a) / 60) + ' min</span></span></button>'; }).join("") +
+    '<div class="card mint"><h3>⏱️ Temporizador libre</h3><p class="small muted">Para cualquier dinámica propia.</p><div class="chips time">' + [1,3,5,10].map(function(m){ return '<button class="chip" data-free="' + m + '">' + m + '<small>min</small></button>'; }).join("") + '</div></div>' +
+    '<div class="notice"><span aria-hidden="true">💡</span><div><b>Consejo:</b> usa “Pantalla completa” y un control remoto o las flechas del teclado. Invita, no obligues: cada quien participa como se sienta cómodo.</div></div>';
+  el.onclick = function(e){
+    var b = e.target.closest("[data-team]"); if (b){ openTeam(TEAM.filter(function(a){ return a.id === b.getAttribute("data-team"); })[0]); return; }
+    var f = e.target.closest("[data-free]"); if (f){ var m = +f.getAttribute("data-free"); openTeam({ icon:"⏱️", title:"Pausa en equipo · " + m + " min", steps:[{ t:"Pausa en equipo", x:"Tómense este tiempo juntos. " + CONFIG.slogan, s:m * 60 }] }); }
+  };
+};
+
+/* =========================================================================
+   K. MI PLAN: termómetro, checklist, reto de 7 días, pide un ajuste
+   ========================================================================= */
+var THERMO_Q = [
+  { k:"estres",  q:"Siento que tengo más trabajo del que puedo hacer en mi horario." },
+  { k:"burnout", q:"Termino la jornada sin energía, incluso después de descansar." },
+  { k:"estres",  q:"Me cuesta desconectarme de los pendientes, incluso cuando descanso." },
+  { k:"burnout", q:"Siento que mi trabajo ha perdido sentido para mí." },
+  { k:"estres",  q:"Siento tensión en el cuerpo (cuello, hombros, mandíbula) durante la jornada." },
+  { k:"burnout", q:"Me siento distante o indiferente con mis tareas o mis compañeros." },
+  { k:"estres",  q:"Me irrito o me impaciento con más facilidad que antes." },
+  { k:"burnout", q:"Siento que, haga lo que haga, no logro buenos resultados." },
+  { k:"estres",  q:"Me cuesta concentrarme por la presión o las interrupciones." },
+  { k:"burnout", q:"El fin de semana o las vacaciones no me alcanzan para recuperarme." }
+];
+var SCALE = [{ v:1, l:"Nunca", s:"o casi nunca" }, { v:2, l:"A veces", s:"de vez en cuando" }, { v:3, l:"Seguido", s:"con frecuencia" }, { v:4, l:"Casi siempre", s:"todos los días" }];
+var RESULT = {
+  estres: {
+    green:  { e:"🌿", t:"Estrés manejable", d:"Por ahora tu nivel de estrés se ve bajo control.", r:["Mantén tus pausas de 1 a 3 minutos.","Sigue cuidando tu sueño y tu hidratación.","Comparte con tu equipo lo que te funciona."] },
+    yellow: { e:"🌤️", t:"El estrés se está acumulando", d:"Hay señales de presión que conviene atender antes de que crezcan.", r:["Haz al menos 3 pausas al día (la ruleta te ayuda).","Elige 3 prioridades diarias y conversa sobre la carga si el tiempo no alcanza.","Practica la respiración 4-4-6 antes de tareas o reuniones difíciles."] },
+    red:    { e:"🔥", t:"Tu cuerpo te está pidiendo un alto", d:"El estrés se siente alto y frecuente. Mereces apoyo.", r:["Conversa con tu jefatura sobre tu carga (usa “Pide un ajuste”).","Busca apoyo de Recursos Humanos o de un profesional de psicología.","Hoy regálate una pausa de 5 a 10 minutos."] }
+  },
+  burnout: {
+    green:  { e:"🌿", t:"Energía y conexión en buen nivel", d:"Tu energía y tu relación con el trabajo se ven bien.", r:["Protege tus horarios de descanso.","Sigue con actividades que disfrutas fuera del trabajo.","Reconoce tus logros, aunque sean pequeños."] },
+    yellow: { e:"🌤️", t:"Señales de desgaste", d:"Hay cansancio o distancia que conviene cuidar.", r:["Define una hora de cierre y silencia notificaciones al terminar.","Planifica pronto un día libre o tus vacaciones.","Habla con alguien de confianza sobre cómo te sientes."] },
+    red:    { e:"🔥", t:"Señales fuertes de agotamiento", d:"No tienes que resolverlo a solas. Pedir ayuda es un buen paso.", r:["Busca apoyo profesional de psicología.","Conversa con tu jefatura o Recursos Humanos sobre ajustes posibles.","Revisa la pestaña Apoyo para encontrar líneas de ayuda."] }
+  }
+};
+function level(sum){ return sum <= 9 ? "green" : sum <= 14 ? "yellow" : "red"; }
+var LVL_TXT = { green:"Verde", yellow:"Amarillo", red:"Rojo" };
+
+var CHECK = {
+  estres: [
+    ["Organiza las cargas de trabajo y establece prioridades.","Cada mañana elijo mis 3 prioridades y empiezo por la más importante."],
+    ["Fomenta pausas activas durante la jornada.","Me levanto y me estiro al menos una vez cada 90 minutos."],
+    ["Brinda herramientas para una buena gestión del tiempo.","Bloqueo en mi agenda un tiempo sin interrupciones para concentrarme."],
+    ["Apoya la salud mental y ofrece recursos.","Busco los recursos de bienestar disponibles y los uso sin culpa."],
+    ["Promueve la comunicación y escucha sus preocupaciones.","Comento a tiempo lo que me preocupa con mi jefatura o mi equipo."],
+    ["Evita la sobrecarga de trabajo.","Antes de aceptar algo nuevo, reviso si realmente me cabe."],
+    ["Capacita en manejo del estrés y habilidades emocionales.","Practico una técnica de calma, como respirar 4-4-6, cuando siento presión."],
+    ["Ofrece flexibilidad cuando sea posible.","Pregunto con respeto por opciones flexibles que me ayuden a organizarme."],
+    ["Reconoce señales de agotamiento y actúa a tiempo.","Presto atención a mis señales de cansancio y me doy una pausa a tiempo."],
+    ["Fomenta un ambiente laboral positivo y de apoyo.","Saludo, agradezco y ofrezco ayuda a mis compañeros."]
+  ],
+  burnout: [
+    ["Establece límites claros entre el trabajo y el descanso.","Defino una hora de cierre y desconecto mis notificaciones al terminar."],
+    ["Evita la sobrecarga de trabajo.","Aprendo a decir “ahora no puedo” con amabilidad cuando estoy al límite."],
+    ["Promueve descansos regulares.","Hago pausas cortas durante el día, aunque tenga mucho trabajo."],
+    ["Anima el uso de vacaciones y tiempo libre.","Planifico y disfruto mis días libres sin revisar el correo."],
+    ["Fomenta actividades de bienestar (deporte, recreación).","Reservo tiempo cada semana para moverme o hacer algo que disfruto."],
+    ["Brinda apoyo emocional y escucha sin juzgar.","Hablo de cómo me siento con alguien de confianza."],
+    ["Reconoce el esfuerzo sin exigir perfección.","Me reconozco lo que hago bien, aunque no sea perfecto."],
+    ["Incentiva el desarrollo profesional con equilibrio.","Aprendo cosas nuevas a un ritmo que puedo sostener."],
+    ["Crea un ambiente de trabajo saludable y colaborativo.","Aporto respeto y colaboración en mi equipo."],
+    ["Actúa ante señales de agotamiento como irritabilidad o cansancio constante.","Si noto irritabilidad o cansancio constante, busco apoyo a tiempo."]
+  ]
+};
+var CHALLENGE = [
+  { e:"⏸️", t:"Toma 3 pausas de 1 minuto durante tu jornada." },
+  { e:"💧", t:"Bebe agua cada vez que termines una tarea." },
+  { e:"🥗", t:"Almuerza lejos de la pantalla." },
+  { e:"🚶", t:"Camina 5 minutos, adentro o afuera." },
+  { e:"💛", t:"Agradece algo concreto a un compañero." },
+  { e:"📵", t:"Desconecta las notificaciones del trabajo al salir." },
+  { e:"📝", t:"Escribe 3 cosas que salieron bien esta semana." }
+];
+var ADJUST = [
+  { k:"priorizar", l:"Priorizar tareas", p:"revisar juntos las prioridades de mis tareas para enfocarme en lo más importante" },
+  { k:"pausas", l:"Pausas breves", p:"poder tomar pausas breves durante la jornada para recuperar energía" },
+  { k:"flex", l:"Flexibilidad", p:"explorar algo de flexibilidad en horario o modalidad, cuando sea posible" },
+  { k:"apoyo", l:"Apoyo en tareas", p:"contar con apoyo o acompañamiento en las tareas que más me están costando" },
+  { k:"carga", l:"Revisar la carga", p:"revisar la cantidad de trabajo que tengo asignada en este momento" },
+  { k:"claridad", l:"Claridad en objetivos", p:"aclarar expectativas y plazos de mis responsabilidades" }
+];
+
+var planState = { thermoI:0, thermoA:[], listTab:"estres", open:{}, tone:"formal", adjust:{ priorizar:true, pausas:true } };
+
+PCE.RENDER.plan = function(el, sub){
+  var tabs = [["termometro","🌡️ Termómetro"],["checklist","✅ Checklist"],["reto","🗓️ Reto 7 días"],["ajuste","✉️ Pide un ajuste"]];
+  sub = tabs.some(function(t){ return t[0] === sub; }) ? sub : "termometro";
+  el.innerHTML = '<p class="eyebrow">Mi plan</p><h1 id="t-plan">Tu bienestar, paso a paso</h1>' +
+    '<div class="seg" role="tablist" aria-label="Secciones de Mi plan">' + tabs.map(function(t){ return '<button role="tab" aria-selected="' + (t[0] === sub) + '" data-sub="' + t[0] + '">' + t[1] + '</button>'; }).join("") + '</div><div id="planBody"></div>' +
+    '<footer class="foot">🔒 Todo se guarda solo en este dispositivo. <button class="btn btn-ghost btn-sm" data-clear style="margin-top:8px">Borrar mis datos</button></footer>';
+  el.onclick = function(e){ var s = e.target.closest("[data-sub]"); if (s) location.hash = "#plan/" + s.getAttribute("data-sub"); if (e.target.closest("[data-clear]")) U.clearAll(); };
+  var body = $("#planBody", el);
+  ({ termometro:thermo, checklist:checklist, reto:reto, ajuste:ajuste })[sub](body);
+};
+
+function thermo(body){
+  var i = planState.thermoI, A = planState.thermoA;
+  if (i >= THERMO_Q.length){ return thermoResult(body); }
+  var q = THERMO_Q[i], prev = Store.data.thermo;
+  body.innerHTML = (i === 0 && prev ? '<p class="notice mint small">Tu último resultado (' + esc(prev.date) + '): estrés ' + LVL_TXT[level(prev.estres)].toLowerCase() + ', burnout ' + LVL_TXT[level(prev.burnout)].toLowerCase() + '.</p>' : '') +
+    '<div class="card"><p class="small muted" style="margin:0 0 6px">Pregunta ' + (i + 1) + ' de 10 · En las últimas 2 semanas…</p><div class="progress" aria-hidden="true"><i style="width:' + (i * 10) + '%"></i></div>' +
+    '<p class="act-step" style="justify-content:flex-start;text-align:left;font-size:1.3rem;min-height:4.2em" id="tq">' + esc(q.q) + '</p>' +
+    '<div class="scale" role="radiogroup" aria-labelledby="tq">' + SCALE.map(function(s){ return '<button role="radio" aria-checked="' + (A[i] === s.v) + '" data-v="' + s.v + '">' + s.l + '<small>' + s.s + '</small></button>'; }).join("") + '</div>' +
+    '<div class="row" style="margin-top:14px;justify-content:space-between"><button class="btn btn-ghost btn-sm" data-back ' + (i === 0 ? "disabled" : "") + '>◀ Atrás</button><span class="small muted">🔒 Nada se envía a nadie</span></div></div>' +
+    '<p class="notice small">⚠️ Este termómetro es orientativo. <b>No es un diagnóstico.</b></p>';
+  body.onclick = function(e){
+    var b = e.target.closest("[data-v]");
+    if (b){ A[i] = +b.getAttribute("data-v"); $$("[data-v]", body).forEach(function(x){ x.setAttribute("aria-checked", x === b); }); setTimeout(function(){ planState.thermoI++; thermo(body); var f = $("[data-v]", body); if (f) f.focus(); }, 280); }
+    if (e.target.closest("[data-back]") && i > 0){ planState.thermoI--; thermo(body); }
+  };
+}
+function thermoResult(body){
+  var A = planState.thermoA, sums = { estres:0, burnout:0 };
+  THERMO_Q.forEach(function(q, k){ sums[q.k] += A[k] || 1; });
+  Store.data.thermo = { date:new Date().toLocaleDateString("es"), estres:sums.estres, burnout:sums.burnout }; Store.save();
+  function card(k, name){ var lv = level(sums[k]), r = RESULT[k][lv], pct = ((sums[k] - 5) / 15 * 100).toFixed(0);
+    return '<div class="card lvl-' + lv + '"><div class="thermo"><div class="bulb" aria-hidden="true">' + r.e + '</div><div><p class="eyebrow" style="margin:0">' + name + ' · ' + LVL_TXT[lv] + '</p><h3 style="margin:0">' + r.t + '</h3></div></div>' +
+      '<div class="meter" role="img" aria-label="Nivel ' + LVL_TXT[lv] + '"><i style="left:' + pct + '%"></i></div><p class="muted small">' + r.d + '</p><ul class="list">' + r.r.map(function(x){ return '<li><span class="dot"></span>' + esc(x) + '</li>'; }).join("") + '</ul></div>'; }
+  var worst = level(sums.estres) === "red" || level(sums.burnout) === "red";
+  body.innerHTML = '<h2>Tu termómetro de hoy</h2>' + card("estres", "Estrés laboral") + card("burnout", "Burnout laboral") +
+    '<p class="notice">⚠️ <span><b>No es un diagnóstico.</b> Es una guía para cuidarte. Tus respuestas no se envían a nadie; solo se guarda el resultado en este dispositivo.</span></p>' +
+    '<div class="row" style="margin-top:14px"><a class="btn btn-gold" href="#pausa">🌿 Hacer una pausa</a>' + (worst ? '<a class="btn btn-primary" href="#apoyo">💚 Buscar apoyo</a>' : '') + '<button class="btn btn-ghost" data-redo>Repetir</button></div>';
+  body.onclick = function(e){ if (e.target.closest("[data-redo]")){ planState.thermoI = 0; planState.thermoA = []; thermo(body); } };
+}
+
+function checklist(body){
+  var k = planState.listTab, list = CHECK[k], done = Store.data.checklist[k] || [];
+  var n = done.length;
+  body.innerHTML = '<div class="seg" role="tablist" aria-label="Lista"><button role="tab" aria-selected="' + (k === "estres") + '" data-list="estres">Estrés laboral</button><button role="tab" aria-selected="' + (k === "burnout") + '" data-list="burnout">Burnout laboral</button></div>' +
+    '<div class="card mint"><div class="row" style="justify-content:space-between"><b style="color:var(--teal)">10 recomendaciones preventivas</b><span class="badge">' + n + ' de 10</span></div><div class="progress" style="margin-top:10px" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="' + n + '" aria-label="Progreso"><i style="width:' + n * 10 + '%"></i></div>' +
+    '<p class="small muted" style="margin:8px 0 0">Marca lo que ya pones en práctica. Toca ⌄ para ver qué puede hacer tu empresa y qué puedes hacer tú.</p></div>' +
+    list.map(function(it, i){ var on = done.indexOf(i) >= 0, open = planState.open[k + i], view = planState.open[k + i + "v"] || "yo", id = "ck-" + k + i;
+      return '<div class="check-item' + (on ? " done" : "") + '"><div class="check-head"><input type="checkbox" id="' + id + '" data-ck="' + i + '"' + (on ? " checked" : "") + '><label for="' + id + '"><span class="num">' + (i + 1) + '</span>' + esc(it[0]) + '</label><button class="check-more" aria-expanded="' + !!open + '" aria-controls="' + id + 'b" aria-label="Ver detalles" data-more="' + i + '">⌄</button></div>' +
+        '<div class="check-body" id="' + id + 'b"' + (open ? "" : " hidden") + '><div class="seg" role="tablist"><button role="tab" aria-selected="' + (view === "emp") + '" data-view="' + i + '" data-v2="emp">🏢 Lo que mi empresa puede hacer</button><button role="tab" aria-selected="' + (view === "yo") + '" data-view="' + i + '" data-v2="yo">🙋 Lo que yo puedo hacer</button></div>' +
+        '<p style="margin:0">' + (view === "emp" ? esc(it[0]) : "“" + esc(it[1]) + "”") + '</p></div></div>'; }).join("");
+  body.onclick = function(e){
+    var l = e.target.closest("[data-list]"); if (l){ planState.listTab = l.getAttribute("data-list"); checklist(body); return; }
+    var m = e.target.closest("[data-more]"); if (m){ var key = k + m.getAttribute("data-more"); planState.open[key] = !planState.open[key]; checklist(body); var again = $('[data-more="' + m.getAttribute("data-more") + '"]', body); if (again) again.focus(); return; }
+    var v = e.target.closest("[data-view]"); if (v){ planState.open[k + v.getAttribute("data-view") + "v"] = v.getAttribute("data-v2"); checklist(body); return; }
+  };
+  body.onchange = function(e){
+    var c = e.target.closest("[data-ck]"); if (!c) return; var i = +c.getAttribute("data-ck"), arr = Store.data.checklist[k] = Store.data.checklist[k] || [];
+    if (c.checked){ if (arr.indexOf(i) < 0) arr.push(i); Sound.tone(660, .3, .04); } else arr.splice(arr.indexOf(i), 1);
+    Store.save(); if (arr.length === 10) PCE.toast("🎉 ¡Las 10 en práctica! Gran trabajo cuidándote."); checklist(body); var f = $("#ck-" + k + i, body); if (f) f.focus();
+  };
+}
+
+function reto(body){
+  var ch = Store.data.challenge, done = ch.done || {}, count = Object.keys(done).length;
+  var today = ch.start ? Math.min(7, Math.floor((new Date(U.dayKey()) - new Date(ch.start)) / 864e5) + 1) : 1;
+  body.innerHTML = '<div class="card teal"><p class="eyebrow">Reto de 7 días</p><h2>Una micro-acción al día</h2><p style="color:var(--mint);margin:0">Pequeños pasos que suman. Si un día no puedes, no pasa nada: retómalo cuando quieras.</p>' +
+    '<div class="days" aria-hidden="true">' + CHALLENGE.map(function(_, i){ var d = i + 1; return '<div class="day' + (done[d] ? " done" : "") + (d === today && !done[d] ? " today" : "") + '">' + (done[d] ? "✓" : d) + '</div>'; }).join("") + '</div>' +
+    '<div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="7" aria-valuenow="' + count + '" aria-label="Días completados"><i style="width:' + (count / 7 * 100).toFixed(0) + '%"></i></div><p class="small" style="margin:8px 0 0;color:var(--mint)">' + count + ' de 7 días · ' + (ch.start ? "Hoy te toca el día " + today : "Empieza cuando quieras") + '</p></div>' +
+    (count === 7 ? '<div class="card gold center"><div style="font-size:2.4rem">🏅</div><h3>¡Completaste el reto!</h3><p>Siete días cuidándote. Elige el hábito que más te gustó y quédate con él.</p></div>' : '') +
+    CHALLENGE.map(function(c, i){ var d = i + 1; return '<div class="challenge' + (done[d] ? " done" : "") + '"><span class="d">' + (done[d] ? "✓" : d) + '</span><p><span aria-hidden="true">' + c.e + '</span> ' + esc(c.t) + '</p><button class="btn ' + (done[d] ? "btn-ghost" : "btn-primary") + ' btn-sm" data-day="' + d + '" aria-pressed="' + !!done[d] + '" aria-label="Día ' + d + ': ' + (done[d] ? "marcar como pendiente" : "marcar como hecho") + '">' + (done[d] ? "Deshacer" : "Hecho") + '</button></div>'; }).join("") +
+    (ch.start ? '<button class="btn btn-ghost btn-sm" data-reset style="margin-top:8px">Reiniciar reto</button>' : '');
+  body.onclick = function(e){
+    var b = e.target.closest("[data-day]");
+    if (b){ var d = b.getAttribute("data-day"); if (!ch.start) ch.start = U.dayKey(); ch.done = ch.done || {}; if (ch.done[d]) delete ch.done[d]; else { ch.done[d] = U.dayKey(); Sound.chime(); PCE.toast("🌱 ¡Día " + d + " listo!"); } Store.save(); reto(body); var f = $('[data-day="' + d + '"]', body); if (f) f.focus(); }
+    if (e.target.closest("[data-reset]") && confirm("¿Reiniciar el reto de 7 días?")){ Store.data.challenge = { start:null, done:{} }; Store.save(); reto(body); }
+  };
+}
+
+function buildMsg(){
+  var sel = ADJUST.filter(function(a){ return planState.adjust[a.k]; });
+  if (!sel.length) return "";
+  var items = sel.map(function(a){ return "• " + a.p.charAt(0).toUpperCase() + a.p.slice(1) + "."; }).join("\n");
+  if (planState.tone === "formal") return "Buen día. Quisiera solicitarle un espacio breve para conversar sobre la organización de mi trabajo. Considero que me ayudaría:\n\n" + items + "\n\nMi intención es seguir dando lo mejor de mí y mantener la calidad de mi trabajo. Quedo pendiente de su disponibilidad. Muchas gracias.";
+  return "¡Hola! ¿Cómo estás? Me gustaría que conversemos un momento sobre cómo organizo mi trabajo. Creo que me ayudaría:\n\n" + items + "\n\nQuiero seguir aportando lo mejor al equipo. ¿Cuándo tendrías unos minutos? ¡Gracias!";
+}
+function copyText(t){
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise(function(res, rej){ var ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy") ? res() : rej(); } catch(e){ rej(e); } ta.remove(); });
+}
+function ajuste(body){
+  var msg = buildMsg();
+  body.innerHTML = '<div class="card"><h2>Pide un ajuste</h2><p class="muted">Elige lo que te ayudaría y te armamos un mensaje cortés para tu jefatura. No incluye datos de salud ni tus resultados.</p>' +
+    '<fieldset style="border:0;padding:0;margin:0"><legend class="q-label">¿Qué te ayudaría?</legend>' + ADJUST.map(function(a){ return '<label class="check-opt"><input type="checkbox" data-adj="' + a.k + '"' + (planState.adjust[a.k] ? " checked" : "") + '> ' + esc(a.l) + '</label>'; }).join("") + '</fieldset>' +
+    '<p class="q-label" style="margin-top:12px">Tono del mensaje</p><div class="seg" role="tablist"><button role="tab" data-tone="formal" aria-selected="' + (planState.tone === "formal") + '">Formal</button><button role="tab" data-tone="cercano" aria-selected="' + (planState.tone === "cercano") + '">Cercano</button></div>' +
+    '<p class="q-label">Tu mensaje</p><div class="msg-preview" aria-live="polite">' + (msg ? esc(msg) : "Elige al menos una opción.") + '</div>' +
+    '<div class="row" style="margin-top:14px"><button class="btn btn-primary" data-copy' + (msg ? "" : " disabled") + '>📋 Copiar</button><a class="btn btn-gold" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(msg) + '"' + (msg ? "" : ' aria-disabled="true" style="pointer-events:none;opacity:.5"') + '>💬 Enviar por WhatsApp</a>' + (navigator.share ? '<button class="btn btn-ghost" data-share' + (msg ? "" : " disabled") + '>↗ Compartir</button>' : '') + '</div></div>';
+  body.onchange = function(e){ var c = e.target.closest("[data-adj]"); if (c){ planState.adjust[c.getAttribute("data-adj")] = c.checked; ajuste(body); var f = $('[data-adj="' + c.getAttribute("data-adj") + '"]', body); if (f) f.focus(); } };
+  body.onclick = function(e){
+    var t = e.target.closest("[data-tone]"); if (t){ planState.tone = t.getAttribute("data-tone"); ajuste(body); return; }
+    if (e.target.closest("[data-copy]")) copyText(buildMsg()).then(function(){ PCE.toast("Mensaje copiado ✓"); }, function(){ PCE.toast("No se pudo copiar. Selecciónalo y cópialo a mano."); });
+    if (e.target.closest("[data-share]")) navigator.share({ text:buildMsg() }).catch(function(){});
+  };
+}
+})();
+</script>
+<script>
+/* =========================================================================
+   L. APOYO: ayuda, entender (estrés y burnout) y tu voz (buzón anónimo)
+   ========================================================================= */
+(function(){
+"use strict";
+var U = PCE.util, $ = U.$, $$ = U.$$, h = U.h, esc = U.esc;
+
+var LEARN = {
+  estres: {
+    name:"Estrés laboral",
+    def:"Es la reacción del cuerpo y la mente cuando las exigencias del trabajo superan, por un tiempo, los recursos o el control que tenemos para afrontarlas. Un poco de estrés puntual nos activa; el problema es cuando se vuelve constante.",
+    causes:["Mucha carga de trabajo o plazos muy cortos","Poca claridad sobre lo que se espera de ti","Poco control sobre cómo organizar tus tareas","Interrupciones constantes y multitarea","Conflictos o poco apoyo en el equipo","Dificultad para desconectarte al terminar"],
+    signs:["Tensión en cuello, hombros o mandíbula","Irritabilidad o impaciencia","Dificultad para concentrarte","Problemas para dormir","Dolor de cabeza o malestar estomacal","Sentir que nunca te alcanza el tiempo"],
+    cons:["Cansancio y menor concentración","Más errores y menos creatividad","Roces en las relaciones del equipo","Si se prolonga, puede afectar la salud física y emocional y llevar al burnout"],
+    tips:["Elige 3 prioridades al día y empieza por la más importante.","Haz pausas de 1 a 5 minutos cada 90 minutos.","Respira 4-4-6 antes de una reunión o tarea difícil.","Divide las tareas grandes en pasos pequeños.","Pide claridad cuando algo no esté claro: preguntar ahorra estrés.","Muévete: un estiramiento corto libera tensión."]
+  },
+  burnout: {
+    name:"Burnout laboral",
+    def:"La OMS lo describe como un síndrome causado por estrés crónico en el trabajo que no se ha manejado con éxito. Se reconoce por tres señales: agotamiento de energía, distancia mental o actitud negativa hacia el trabajo, y sensación de menor eficacia.",
+    causes:["Estrés alto durante mucho tiempo sin recuperación","Sobrecarga sostenida de trabajo","Falta de reconocimiento","Pocas oportunidades de descanso real","Sentir que tus valores chocan con el trabajo","Ambientes con poco apoyo o trato injusto"],
+    signs:["Cansancio que no se quita al descansar","Sentirte distante, indiferente o cínico con el trabajo","Sensación de que nada de lo que haces alcanza","Pérdida de motivación y de sentido","Aislarte de compañeros","Irritabilidad o tristeza frecuentes"],
+    cons:["Agotamiento físico y emocional","Baja satisfacción y motivación","Ausencias y deseo de dejar el trabajo","Impacto en la vida personal y familiar"],
+    tips:["Define una hora de cierre y respétala.","Silencia notificaciones del trabajo fuera de horario.","Recupera algo que disfrutes fuera del trabajo.","Habla con alguien de confianza sobre cómo te sientes.","Usa tus días libres y vacaciones para descansar de verdad.","Si las señales se mantienen por semanas, busca apoyo profesional."]
+  }
+};
+var COMPARE = [
+  ["Cómo se siente","“Tengo demasiado”: urgencia y prisa","“Ya no me queda nada”: vacío"],
+  ["Energía","Acelerada, pero se agota","Muy baja, incluso tras descansar"],
+  ["Emociones","Reactivas: ansiedad, irritación","Apagadas: distancia, indiferencia"],
+  ["Relación con el trabajo","Hay compromiso, aunque cueste","Desconexión y pérdida de sentido"],
+  ["Duración","Puede ser puntual","Se instala con el tiempo (crónico)"]
+];
+var FACTS = [
+  { n:"12 000 millones", t:"de días de trabajo se pierden cada año por depresión y ansiedad, con un costo cercano a 1 billón de dólares en productividad.", s:"OMS, 2022 — Directrices sobre la salud mental en el trabajo" },
+  { n:"15 %", t:"de los adultos en edad de trabajar vive con un trastorno mental en algún momento.", s:"OMS — Hoja informativa “La salud mental en el trabajo”" },
+  { n:"+35 %", t:"de riesgo de accidente cerebrovascular al trabajar 55 horas o más por semana, frente a 35-40 horas.", s:"OMS y OIT, 2021" },
+  { n:"2019", t:"La OMS incluyó el burnout en la CIE-11 como “fenómeno ocupacional”, no como condición médica.", s:"OMS, CIE-11" }
+];
+var learnTab = "estres";
+
+function renderLearn(body){
+  var L = LEARN[learnTab];
+  function block(icon, title, arr){ return '<div class="card"><h3>' + icon + ' ' + title + '</h3><ul class="list">' + arr.map(function(x){ return '<li><span class="dot"></span>' + esc(x) + '</li>'; }).join("") + '</ul></div>'; }
+  body.innerHTML = '<div class="seg" role="tablist" aria-label="Tema"><button role="tab" aria-selected="' + (learnTab === "estres") + '" data-lt="estres">Estrés laboral</button><button role="tab" aria-selected="' + (learnTab === "burnout") + '" data-lt="burnout">Burnout laboral</button></div>' +
+    '<div class="card teal"><p class="eyebrow">¿Qué es?</p><h2>' + L.name + '</h2><p style="margin:0;color:var(--mint)">' + esc(L.def) + '</p></div>' +
+    '<div class="grid2" style="grid-template-columns:1fr">' + block("🔍", "Causas frecuentes", L.causes) + block("🚦", "Señales de alerta", L.signs) + block("⚠️", "Consecuencias", L.cons) + '</div>' +
+    '<h2 style="margin-top:20px">Consejos prácticos</h2><p class="small muted">Desliza para ver los 6 →</p><div class="hscroll" tabindex="0" aria-label="Consejos prácticos">' + L.tips.map(function(t, i){ return '<article class="tip"><span class="n">' + (i + 1) + '</span><p style="margin:0;font-weight:600">' + esc(t) + '</p></article>'; }).join("") + '</div>' +
+    '<h2 style="margin-top:16px">Estrés vs. burnout</h2><table class="compare"><thead><tr><th scope="col"></th><th scope="col">Estrés</th><th scope="col">Burnout</th></tr></thead><tbody>' + COMPARE.map(function(r){ return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td><td>' + esc(r[2]) + '</td></tr>'; }).join("") + '</tbody></table>' +
+    '<h2 style="margin-top:20px">Datos que importan</h2><div class="grid2" style="grid-template-columns:1fr">' + FACTS.map(function(f){ return '<div class="card mint" style="margin:0"><div style="font-family:var(--font-display);font-weight:800;font-size:1.7rem;color:var(--teal)">' + esc(f.n) + '</div><p style="margin:0 0 6px">' + esc(f.t) + '</p><p class="small muted" style="margin:0">Fuente: ' + esc(f.s) + '</p></div>'; }).join("") + '</div>' +
+    '<a class="btn btn-gold btn-block" href="#plan/termometro" style="margin-top:16px">🌡️ ¿Cómo estoy yo? Hacer el termómetro</a>';
+  body.onclick = function(e){ var b = e.target.closest("[data-lt]"); if (b){ learnTab = b.getAttribute("data-lt"); renderLearn(body); $("[data-lt=" + learnTab + "]", body).focus(); } };
+}
+
+function renderHelp(body){
+  function telLink(n){ var d = String(n).replace(/[^\d+]/g, ""); return /^\+?\d{3,}$/.test(d) ? d : null; }
+  function res(title, arr){ return '<div class="card"><h3>' + title + '</h3>' + arr.map(function(r){ return '<a class="res-link" href="' + esc(r.url) + '" target="_blank" rel="noopener"><span><b>' + esc(r.title) + '</b><br><span class="small muted">' + esc(r.by) + '</span></span><span aria-hidden="true">↗</span></a>'; }).join("") + '</div>'; }
+  body.innerHTML = '<div class="notice alert" role="note"><span aria-hidden="true">🆘</span><div><b>' + esc(CONFIG.crisisText) + '</b><div class="row" style="margin-top:10px"><a class="btn btn-primary btn-sm" href="tel:911">📞 Llamar al 911</a></div></div></div>' +
+    '<h2 style="margin-top:18px">Líneas de ayuda en El Salvador</h2>' +
+    CONFIG.helpLines.map(function(l){
+      var w = l.whatsapp ? String(l.whatsapp).replace(/[^\d]/g, "") : "";
+      var t = telLink(l.number);
+      var href = w ? ' href="https://wa.me/' + esc(w) + '" target="_blank" rel="noopener"' : (t ? ' href="tel:' + t + '"' : '');
+      var tag = w ? 'a' : (t ? 'a' : 'div');
+      var icon = w ? '💬' : (t ? '📞' : '');
+      return '<' + tag + href + ' class="help-line"><span class="gi" aria-hidden="true">' + l.icon + '</span><span style="flex:1"><b>' + esc(l.name) + '</b><span class="small muted">' + esc(l.detail) + '</span><br><span class="num">' + U.verifyTag(l.number) + '</span></span>' + (icon ? '<span aria-hidden="true">' + icon + '</span>' : '') + '</' + tag + '>';
+    }).join("") +
+    res("📚 Lecturas", CONFIG.resources.readings) + res("🎬 Videos", CONFIG.resources.videos) + res("📱 Apps recomendadas", CONFIG.resources.apps) +
+    '<footer class="foot">🔒 Esta herramienta no recopila datos personales. <button class="btn btn-ghost btn-sm" data-clear style="margin-top:8px">Borrar mis datos</button></footer>';
+  body.onclick = function(e){ if (e.target.closest("[data-clear]")) U.clearAll(); };
+}
+
+/* Envío anónimo a Google Forms (si está configurado en CONFIG.googleForm) */
+function sendForm(data){
+  var G = CONFIG.googleForm;
+  if (!G.formAction){ PCE.toast("El buzón aún no está conectado. Pide a quien administra la herramienta que agregue el enlace."); return Promise.resolve(false); }
+  var p = new URLSearchParams();
+  Object.keys(data).forEach(function(k){ if (data[k] && G.fields[k]) p.append(G.fields[k], data[k]); });
+  return fetch(G.formAction, { method:"POST", mode:"no-cors", body:p }).then(function(){ PCE.toast("¡Gracias! Tu mensaje llegó de forma anónima 💚"); return true; }, function(){ PCE.toast("No hay conexión. Intenta de nuevo más tarde."); return false; });
+}
+var survey = {};
+function renderVoice(body){
+  var connected = !!CONFIG.googleForm.formAction;
+  var QS = [
+    { k:"q1", q:"¿Te ayudó tomar una pausa con esta herramienta?", o:["Sí, mucho","Un poco","Todavía no"] },
+    { k:"q2", q:"¿Con qué frecuencia la usarías?", o:["Todos los días","Algunas veces por semana","De vez en cuando"] },
+    { k:"q3", q:"¿Qué te gustaría encontrar aquí?", o:["Más juegos","Más pausas guiadas","Más apoyo profesional","Actividades en equipo"] }
+  ];
+  body.innerHTML = '<div class="notice mint"><span aria-hidden="true">🔒</span><div><b>Tu voz es anónima.</b> No pedimos nombre, correo ni datos personales. Evita escribir información que te identifique.</div></div>' +
+    (connected ? '' : '<p class="notice small" style="margin-top:10px">⚙️ El buzón está listo, pero aún no se conecta a un formulario. Mientras tanto, los envíos no se guardan.</p>') +
+    '<div class="card" style="margin-top:14px"><h3>Reacción rápida</h3><p class="small muted">¿Qué te pareció esta herramienta?</p><div class="moods" role="group" aria-label="Reacción">' +
+      [["😍","Me encanta"],["🙂","Me gusta"],["😐","Normal"],["🙁","Poco útil"],["💡","Tengo ideas"]].map(function(r){ return '<button class="mood" data-react="' + r[1] + '"><span class="e" aria-hidden="true">' + r[0] + '</span>' + r[1] + '</button>'; }).join("") + '</div></div>' +
+    '<div class="card"><h3>Caja de sugerencias</h3><label class="sr-only" for="sug">Tu sugerencia</label><textarea id="sug" class="field" maxlength="800" placeholder="¿Qué podríamos mejorar en el trabajo o en esta herramienta?"></textarea><button class="btn btn-primary btn-block" style="margin-top:10px" data-sug>Enviar sugerencia anónima</button></div>' +
+    '<div class="card"><h3>Encuesta de 3 preguntas</h3>' + QS.map(function(q){ return '<p class="q-label" id="l' + q.k + '">' + esc(q.q) + '</p><div class="chips" role="radiogroup" aria-labelledby="l' + q.k + '" style="margin-bottom:14px">' + q.o.map(function(o){ return '<button class="chip" role="radio" aria-checked="' + (survey[q.k] === o) + '" data-q="' + q.k + '" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join("") + '</div>'; }).join("") +
+    '<button class="btn btn-gold btn-block" data-survey>Enviar encuesta</button></div>';
+  body.onclick = function(e){
+    var r = e.target.closest("[data-react]"); if (r){ $$("[data-react]", body).forEach(function(x){ x.setAttribute("aria-pressed", x === r); }); sendForm({ reaction:r.getAttribute("data-react") }); return; }
+    var q = e.target.closest("[data-q]"); if (q){ var k = q.getAttribute("data-q"); survey[k] = q.getAttribute("data-o"); $$('[data-q="' + k + '"]', body).forEach(function(x){ x.setAttribute("aria-checked", x === q); }); return; }
+    if (e.target.closest("[data-sug]")){ var t = $("#sug", body); if (!t.value.trim()){ PCE.toast("Escribe tu sugerencia primero."); t.focus(); return; } sendForm({ suggestion:t.value.trim() }).then(function(ok){ if (ok) t.value = ""; }); return; }
+    if (e.target.closest("[data-survey]")){ if (!survey.q1 && !survey.q2 && !survey.q3){ PCE.toast("Elige al menos una respuesta."); return; } sendForm({ q1:survey.q1, q2:survey.q2, q3:survey.q3 }).then(function(ok){ if (ok){ survey = {}; renderVoice(body); } }); }
+  };
+}
+
+PCE.RENDER.apoyo = function(el, sub){
+  var tabs = [["ayuda","💚 Ayuda"],["entender","📖 Entender"],["voz","🗣️ Tu voz"]];
+  sub = tabs.some(function(t){ return t[0] === sub; }) ? sub : "ayuda";
+  el.innerHTML = '<p class="eyebrow">Apoyo</p><h1 id="t-apoyo">' + (sub === "entender" ? "Entender el estrés y el burnout" : sub === "voz" ? "Tu voz cuenta" : "No estás solo ni sola") + '</h1>' +
+    '<div class="seg" role="tablist" aria-label="Secciones de Apoyo">' + tabs.map(function(t){ return '<button role="tab" aria-selected="' + (t[0] === sub) + '" data-sub="' + t[0] + '">' + t[1] + '</button>'; }).join("") + '</div><div id="apoyoBody"></div>';
+  $$("[data-sub]", el).forEach(function(b){ b.onclick = function(){ location.hash = "#apoyo/" + b.getAttribute("data-sub"); }; });
+  var body = $("#apoyoBody", el);
+  ({ ayuda:renderHelp, entender:renderLearn, voz:renderVoice })[sub](body);
+};
+
+/* Arranque */
+PCE.route(true);
+})();
+</script>
+</body>
+</html>
