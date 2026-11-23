@@ -960,7 +960,7 @@ GAMES.jardin = { icon:"🪨", title:"Jardín zen", desc:"Dibuja surcos en la are
     var wrap = $(".game-stage", stage), sand = document.createElement("canvas"), tool = "rake", drawing = false, lastP = null;
     function makeSand(w, hh){ sand.width = w; sand.height = hh; var s = sand.getContext("2d"); s.fillStyle = "#EADFC7"; s.fillRect(0, 0, w, hh);
       for (var i = 0; i < w * hh / 18; i++){ var v = Math.random(); s.fillStyle = v > .5 ? "rgba(255,255,255,.35)" : "rgba(150,120,80,.18)"; s.fillRect(Math.random() * w, Math.random() * hh, 1.2, 1.2); } }
-    var K = makeCanvas(wrap, function(o){ makeSand(Math.ceil(o.w), Math.ceil(o.h)); o.ctx.drawImage(sand, 0, 0); });
+    var K = makeCanvas(wrap, function(o){ if (!o.w || !o.h) return; makeSand(Math.ceil(o.w), Math.ceil(o.h)); o.ctx.drawImage(sand, 0, 0); });
     var ctx = K.ctx;
     function groove(x0, y0, x1, y1, w){ ctx.lineCap = "round"; ctx.lineWidth = w; ctx.strokeStyle = "rgba(140,110,70,.28)"; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
       ctx.lineWidth = w * .45; ctx.strokeStyle = "rgba(255,255,255,.45)"; ctx.beginPath(); ctx.moveTo(x0 - 1.2, y0 - 1.2); ctx.lineTo(x1 - 1.2, y1 - 1.2); ctx.stroke(); }
