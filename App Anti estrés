@@ -809,8 +809,8 @@ function renderHome(el){
       '<div class="wheel-box"><div class="pointer"></div>' + wheelSVG() + '<div class="hub" aria-hidden="true">🌿</div></div>' +
       '<p id="wheelResult" class="act-step" style="min-height:1.6em;font-size:1.2rem" aria-live="polite"></p>' +
       '<div class="row" style="justify-content:center"><button class="btn btn-primary" id="spin">🎡 Girar la ruleta</button><button class="btn btn-gold" id="doWheel" hidden>Hacerlo ahora</button></div></div>' +
-    '<div class="grid2"><a class="card" href="#plan/termometro" style="text-decoration:none;margin:0"><div style="font-size:1.6rem">🌡️</div><b style="color:var(--teal)">Termómetro de bienestar</b><p class="small muted" style="margin:0">10 preguntas, 2 minutos</p></a>' +
-      '<a class="card" href="#apoyo/entender" style="text-decoration:none;margin:0"><div style="font-size:1.6rem">📖</div><b style="color:var(--teal)">Entender el estrés y el burnout</b><p class="small muted" style="margin:0">Tarjetas cortas</p></a></div>';
+    '<div class="grid2"><button type="button" class="card" data-route="#plan/termometro" style="text-align:left;margin:0"><div style="font-size:1.6rem">🌡️</div><b style="color:var(--teal)">Termómetro de bienestar</b><p class="small muted" style="margin:0">10 preguntas, 2 minutos</p></button>' +
+      '<button type="button" class="card" data-route="#apoyo/entender" style="text-align:left;margin:0"><div style="font-size:1.6rem">📖</div><b style="color:var(--teal)">Entender el estrés y el burnout</b><p class="small muted" style="margin:0">Tarjetas cortas</p></button></div>';
   var wheel = $("svg.wheel", el); wheel.style.transform = "rotate(" + wheelRot + "deg)";
   function preview(){
     var plan = buildPlan(homeState.min, homeState.mood || "tenso");
@@ -818,7 +818,7 @@ function renderHome(el){
   }
   preview();
   var chosen = null;
-  el.onclick = function(e){ var navLink = e.target.closest('a[href^="#"]'); if (navLink) { var hash = navLink.getAttribute("href"); if (hash === "#plan/termometro" || hash === "#apoyo/entender") { e.preventDefault(); if (location.hash === hash) route(true); else location.hash = hash; return; } }
+  el.onclick = function(e){ var navButton = e.target.closest("[data-route]"); if (navButton) { var hash = navButton.getAttribute("data-route"); if (location.hash === hash) route(true); else location.hash = hash; return; }
     var t = e.target.closest("[data-min]");
     if (t){ homeState.min = +t.getAttribute("data-min"); $$("[data-min]", el).forEach(function(b){ b.setAttribute("aria-checked", b === t); }); preview(); return; }
     var m = e.target.closest("[data-mood]");
