@@ -818,7 +818,7 @@ function renderHome(el){
   }
   preview();
   var chosen = null;
-  el.onclick = function(e){
+  el.onclick = function(e){ var navLink = e.target.closest('a[href^="#"]'); if (navLink) { var hash = navLink.getAttribute("href"); if (hash === "#plan/termometro" || hash === "#apoyo/entender") { e.preventDefault(); if (location.hash === hash) route(true); else location.hash = hash; return; } }
     var t = e.target.closest("[data-min]");
     if (t){ homeState.min = +t.getAttribute("data-min"); $$("[data-min]", el).forEach(function(b){ b.setAttribute("aria-checked", b === t); }); preview(); return; }
     var m = e.target.closest("[data-mood]");
